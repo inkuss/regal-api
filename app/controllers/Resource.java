@@ -249,8 +249,10 @@ public class Resource extends MyController {
 			HttpURLConnection connection = (HttpURLConnection) url
 				.openConnection();
 			response().setContentType(connection.getContentType());
-			response().setHeader("Content-Disposition",
-				"inline;filename=" + node.getFileLabel());
+			response().setHeader(
+				"Content-Disposition",
+				"inline;filename=\"" + node.getFileLabel()
+					+ "\"");
 			return ok(connection.getInputStream());
 		    } catch (FileNotFoundException e) {
 			throw new HttpArchiveException(404, e);
