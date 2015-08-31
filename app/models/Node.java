@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
@@ -66,11 +67,13 @@ public class Node {
     private String metadataFile = null;
     private String seqFile = null;
     private String uploadFile = null;
+    private String objectTimestampFile = null;
     private List<Link> links = new Vector<Link>();
     private List<Transformer> transformer = new Vector<Transformer>();
 
     private String metadata = null;
     private String seq = null;
+    private String objectTimestamp = null;
 
     private String pid = null;
 
@@ -883,6 +886,11 @@ public class Node {
 	if (lastModifiedBy != null)
 	    aboutMap.put("lastModifiedBy", getLastModifiedBy());
 	aboutMap.put("modified", getLastModified());
+	if (objectTimestamp != null) {
+	    aboutMap.put("objectTimestamp", objectTimestamp);
+	} else {
+	    aboutMap.put("objectTimestamp", getLastModified());
+	}
 	aboutMap.put("created", getCreationDate());
 	aboutMap.put("describes", this.getAggregationUri());
 	rdf.put("isDescribedBy", aboutMap);
@@ -908,6 +916,39 @@ public class Node {
 	}
 
 	rdf.put("@context", getContext());
+	return rdf;
+    }
+
+    public Map<String, Object> getLdShortStyle() {
+	List<Link> ls = getLinks();
+	Map<String, Object> rdf = new HashMap<String, Object>();
+	rdf.put("@id", getPid());
+	for (Link l : ls) {
+	    if (Globals.profile.nMap.get("title").uri.equals(l.getPredicate())) {
+		addLinkToJsonMap(rdf, l);
+		break;
+	    }
+	}
+	addPartsToJsonMap(rdf);
+	rdf.remove("isNodeType");
+	rdf.put("contentType", getContentType());
+	if (parentPid != null)
+	    rdf.put("parentPid", parentPid);
+	if (getMimeType() != null && !getMimeType().isEmpty()) {
+	    Map<String, Object> hasDataMap = new HashMap<String, Object>();
+	    hasDataMap.put("@id", getDataUri());
+	    hasDataMap.put("format", getMimeType());
+	    hasDataMap.put("size", getFileSize());
+	    if (getChecksum() != null) {
+		Map<String, Object> checksum = new HashMap<String, Object>();
+		checksum.put("checksumValue", getChecksum());
+		checksum.put("generator", "http://en.wikipedia.org/wiki/MD5");
+		checksum.put("type",
+			"http://downlode.org/Code/RDF/File_Properties/schema#Checksum");
+		hasDataMap.put("checksum", checksum);
+	    }
+	    rdf.put("hasData", hasDataMap);
+	}
 	return rdf;
     }
 
@@ -969,6 +1010,7 @@ public class Node {
 	cmap.put("label", "http://www.w3.org/2000/01/rdf-schema#label");
 	cmap.put("nodeType", REL_IS_NODE_TYPE);
 	cmap.put("modified", "http://purl.org/dc/terms/modified");
+	cmap.put("objectTimestamp", "http://hbz-nrw.de/regal#objectTimestamp");
 	cmap.put("created", "http://purl.org/dc/terms/created");
 
 	pmap = new HashMap<String, Object>();
@@ -1382,6 +1424,15 @@ public class Node {
     }
 
     /**
+     * @return a map without the context document
+     */
+    public Map<String, Object> getLdWithoutContextShortStyle() {
+	Map<String, Object> map = getLdShortStyle();
+	map.remove("@context");
+	return map;
+    }
+
+    /**
      * @param userId
      * @return this
      */
@@ -1404,4 +1455,21 @@ public class Node {
 	String doi = this.getDoi();
 	return doi != null && !doi.isEmpty();
     }
+
+    public String getObjectTimestampFile() {
+	return objectTimestampFile;
+    }
+
+    public void setObjectTimestampFile(String path) {
+	this.objectTimestampFile = path;
+    }
+
+    public void setObjectTimestamp(String timestamp) {
+	objectTimestamp = timestamp;
+    }
+
+    public String getObjectTimestamp() {
+	return objectTimestamp;
+    }
+
 }

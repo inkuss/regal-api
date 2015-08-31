@@ -318,8 +318,37 @@ public class Utils {
 	}
     }
 
-    void createMetadataStream(Node node) {
+    public void updateObjectTimestampStream(Node node) {
+	try {
+	    File file = new File(node.getObjectTimestampFile());
+	    if (dataStreamExists(node.getPid(), "objectTimestamp")) {
+		new ModifyDatastream(node.getPid(), "objectTimestamp")
+			.versionable(true).dsState("A")
+			.dsLabel("a simple timestamp").mimeType("text/plain")
+			.controlGroup("M").content(file).execute();
+	    } else {
+		new AddDatastream(node.getPid(), "objectTimestamp")
+			.versionable(true).dsState("A").mimeType("text/plain")
+			.dsLabel("a simple timestamp").content(file)
+			.controlGroup("M").execute();
+	    }
+	} catch (FedoraClientException e) {
+	    throw new HttpArchiveException(e.getStatus(), e);
+	}
+    }
 
+    public void createObjectTimestampStream(Node node) {
+	try {
+	    Upload request = new Upload(new File(node.getObjectTimestampFile()));
+	    UploadResponse response = request.execute();
+	    String location = response.getUploadLocation();
+	    new AddDatastream(node.getPid(), "objectTimestamp")
+		    .versionable(true).dsState("A")
+		    .dsLabel("a simple timestamp").controlGroup("M")
+		    .mimeType("text/plain").dsLocation(location).execute();
+	} catch (FedoraClientException e) {
+	    throw new HttpArchiveException(e.getStatus(), e);
+	}
     }
 
     void updateManagedStream(Node node) {

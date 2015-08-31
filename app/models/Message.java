@@ -30,8 +30,9 @@ import com.wordnik.swagger.core.util.JsonUtil;
  * 
  */
 @SuppressWarnings("javadoc")
-@XmlRootElement(name = "errorMessage")
+@XmlRootElement(name = "message")
 public class Message {
+    String error;
     String text;
     int code;
 
@@ -45,15 +46,16 @@ public class Message {
 	this.code = code;
     }
 
-    public Message(Throwable t, int code) {
-	text = t.getMessage() + "\n" + getStackTrace(t);
+    public Message(String text, Throwable t, int code) {
+	this.error = getStackTrace(t);
+	this.text = text;
 	this.code = code;
     }
 
-    String getStackTrace(Throwable t) {
-	StringWriter sw = new StringWriter();
-	t.printStackTrace(new PrintWriter(sw));
-	return sw.toString();
+    public Message(Throwable t, int code) {
+	this.error = getStackTrace(t);
+	text = t.getMessage();
+	this.code = code;
     }
 
     public String getText() {
@@ -70,6 +72,20 @@ public class Message {
 
     public void setCode(int code) {
 	this.code = code;
+    }
+
+    public String getError() {
+	return error;
+    }
+
+    public void setError(String error) {
+	this.error = error;
+    }
+
+    private String getStackTrace(Throwable t) {
+	StringWriter sw = new StringWriter();
+	t.printStackTrace(new PrintWriter(sw));
+	return sw.toString();
     }
 
     @Override

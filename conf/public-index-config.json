@@ -239,6 +239,40 @@
                 
             ]
 		},
+		"part": {
+            "dynamic_templates": [
+                { 
+                	"context":{
+                	  "match":"@context", 
+                      "mapping": {
+                         "type": "object",
+    					 "enabled": false
+                      }
+                	}
+                },
+                {
+                	 "dates": {
+                      "match":"*",
+                      "match_mapping_type": "date",
+                      "mapping": {
+                          "type":           "string",
+                          "index":       "not_analyzed"
+                      }
+                	}
+                },
+                {
+                	 "all": {
+                      "match":"*",
+                      "match_mapping_type": "string",
+                      "mapping": {
+                          "type":           "string",
+                          "index":       "not_analyzed"
+                      }
+                	}
+                }
+                
+            ]
+		},
 		"version": {
             "dynamic_templates": [
                 { 

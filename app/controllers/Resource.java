@@ -24,7 +24,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -169,28 +168,14 @@ public class Resource extends MyController {
 
     @ApiOperation(produces = "application/json,text/html,application/rdf+xml", nickname = "listResource", value = "listResource", notes = "Returns a resource. Redirects in dependends to the accept header ", response = Message.class, httpMethod = "GET")
     public static Promise<Result> listResource(@PathParam("pid") String pid) {
-	try {
-	    response().setHeader("Access-Control-Allow-Origin", "*");
-	    if (request().accepts("text/html"))
-		return asHtml(pid);
-	    if (request().accepts("application/rdf+xml"))
-		return asRdf(pid);
-	    if (request().accepts("text/plain"))
-		return asRdf(pid);
-	    return asJson(pid);
-	} catch (HttpArchiveException e) {
-	    return Promise.promise(new Function0<Result>() {
-		public Result apply() {
-		    return JsonMessage(new Message(e, e.getCode()));
-		}
-	    });
-	} catch (Exception e) {
-	    return Promise.promise(new Function0<Result>() {
-		public Result apply() {
-		    return JsonMessage(new Message(e, 500));
-		}
-	    });
-	}
+	response().setHeader("Access-Control-Allow-Origin", "*");
+	if (request().accepts("text/html"))
+	    return asHtml(pid);
+	if (request().accepts("application/rdf+xml"))
+	    return asRdf(pid);
+	if (request().accepts("text/plain"))
+	    return asRdf(pid);
+	return asJson(pid);
     }
 
     @ApiOperation(produces = "application/rdf+xml,text/plain", nickname = "asRdf", value = "asRdf", notes = "Returns a rdf display of the resource", response = Message.class, httpMethod = "GET")
@@ -279,7 +264,7 @@ public class Resource extends MyController {
 	    RegalObject object = getRegalObject(request().body().asJson());
 	    Node newNode = create.patchResource(node, object);
 	    String result = newNode.getPid() + " created/updated!";
-	    return JsonMessage(new Message(result, 200));
+	    return JsonMessage(new Message(result));
 	});
     }
 
@@ -315,7 +300,7 @@ public class Resource extends MyController {
 			newNode = create.updateResource(node, object);
 		    }
 		    String result = newNode.getPid() + " created/updated!";
-		    return JsonMessage(new Message(result, 200));
+		    return JsonMessage(new Message(result));
 		});
     }
 
@@ -502,24 +487,17 @@ public class Resource extends MyController {
 	return new ReadMetadataAction().call(
 		pid,
 		node -> {
-		    try {
-
-			List<String> nodeIds = node.getPartsSorted().stream()
-				.map((Link l) -> l.getObject())
-				.collect(Collectors.toList());
-			if ("short".equals(style)) {
-			    return getJsonResult(nodeIds);
-			}
-			List<Node> result = read.getNodes(nodeIds);
-
-			if (request().accepts("text/html")) {
-			    return ok(resource.render(json(result)));
-			} else {
-			    return getJsonResult(result);
-			}
-		    } catch (Exception e) {
-			return JsonMessage(new Message(e, 500));
+		    List<String> nodeIds = node.getPartsSorted().stream()
+			    .map((Link l) -> l.getObject())
+			    .collect(Collectors.toList());
+		    if ("short".equals(style)) {
+			return getJsonResult(nodeIds);
 		    }
+		    List<Node> result = read.getNodes(nodeIds);
+		    if (request().accepts("text/html")) {
+			return ok(resource.render(json(result)));
+		    }
+		    return getJsonResult(result);
 
 		});
     }
@@ -530,76 +508,88 @@ public class Resource extends MyController {
 	return new ReadMetadataAction().call(
 		null,
 		node -> {
-		    try {
-			SearchHits hits = Globals.search.query(new String[] {
-				Globals.PUBLIC_INDEX_PREF
-					+ Globals.namespaces[0],
-				Globals.PDFBOX_OCR_INDEX_PREF
-					+ Globals.namespaces[0] }, queryString,
-				from, until);
-			List<SearchHit> list = Arrays.asList(hits.getHits());
-			List<Map<String, Object>> hitMap = read
-				.hitlistToMap(list);
-			if (request().accepts("text/html")) {
-			    return ok(search.render(json(hitMap), queryString,
-				    hits.getTotalHits(), from, until));
-			} else {
-			    return getJsonResult(hitMap);
-			}
-		    } catch (Exception e) {
-			return JsonMessage(new Message(e, 500));
+		    SearchHits hits = Globals.search.query(new String[] {
+			    Globals.PUBLIC_INDEX_PREF + Globals.namespaces[0],
+			    Globals.PDFBOX_OCR_INDEX_PREF
+				    + Globals.namespaces[0] }, queryString,
+			    from, until);
+		    List<SearchHit> list = Arrays.asList(hits.getHits());
+		    List<Map<String, Object>> hitMap = read.hitlistToMap(list);
+		    if (request().accepts("text/html")) {
+			return ok(search.render(json(hitMap), queryString,
+				hits.getTotalHits(), from, until));
 		    }
-
+		    return getJsonResult(hitMap);
 		});
     }
 
     @ApiOperation(produces = "application/json,text/html", nickname = "listAllParts", value = "listAllParts", notes = "List resources linked with hasPart", response = play.mvc.Result.class, httpMethod = "GET")
-    public static Promise<Result> listAllParts(@PathParam("pid") String pid) {
-	return new ReadMetadataAction().call(pid, node -> {
-	    try {
+	public static Promise<Result> listAllParts(@PathParam("pid") String pid,
+						   @QueryParam("style") String style) {
+	return new ReadMetadataAction().call(
+					     pid,
+					     node -> {
+						 try {
 
-		if (request().accepts("text/html")) {
-		    List<Node> result = read.getParts(node);
-		    return ok(resource.render(json(result)));
-		} else if (request().accepts("application/json")) {
-		    return getJsonResult(read.getPartsAsTree(node));
-		} else {
-		    List<Node> result = read.getParts(node);
-		    return asRdf(result);
-		}
-	    } catch (Exception e) {
-		return JsonMessage(new Message(e, 500));
-	    }
-	});
+						     if (request().accepts("text/html")) {
+							 List<Node> result = read.getParts(node);
+							 return ok(resource.render(json(result)));
+						     } else if (request().accepts("application/json")) {
+							 Map<String, Object> result = read.getPartsAsTree(
+													  node, style);
+							 return asJson(result);
+						     } else {
+							 List<Node> result = read.getParts(node);
+							 return asRdf(result);
+						     }
+						 } catch (Exception e) {
+						     return JsonMessage(new Message(e, 500));
+						 }
+					     });
     }
 
-    private static Result asRdf(List<Node> result)
-	    throws UnsupportedEncodingException, Exception {
-	RDFFormat format = RDFFormat.TURTLE;
-	response().setContentType("text/turtle");
-
-	if (request().accepts("application/rdf+xml")) {
-	    format = RDFFormat.RDFXML;
-	    response().setContentType("application/rdf+xml");
-	} else if (request().accepts("text/turtle")) {
-	    format = RDFFormat.TURTLE;
+    private static Result asRdf(List<Node> result) {
+	try {
+	    RDFFormat format = RDFFormat.TURTLE;
 	    response().setContentType("text/turtle");
-	} else if (request().accepts("text/plain")) {
-	    format = RDFFormat.NTRIPLES;
-	    response().setContentType("text/plain");
+	    if (request().accepts("application/rdf+xml")) {
+		format = RDFFormat.RDFXML;
+		response().setContentType("application/rdf+xml");
+	    } else if (request().accepts("text/turtle")) {
+		format = RDFFormat.TURTLE;
+		response().setContentType("text/turtle");
+	    } else if (request().accepts("text/plain")) {
+		format = RDFFormat.NTRIPLES;
+		response().setContentType("text/plain");
+	    }
+	    String rdf = RdfUtils.readRdfToString(new ByteArrayInputStream(
+		    json(result).getBytes("utf-8")), RDFFormat.JSONLD, format,
+		    "");
+	    return ok(rdf);
+	} catch (Exception e) {
+	    throw new HttpArchiveException(500, e);
 	}
-	String rdf = RdfUtils.readRdfToString(
-		new ByteArrayInputStream(json(result).getBytes("utf-8")),
-		RDFFormat.JSONLD, format, "");
-	return ok(rdf);
+    }
+
+    private static Result asJson(Map<String, Object> result) {
+	return getJsonResult(result);
     }
 
     @ApiOperation(produces = "application/json,text/html", nickname = "listAllParts", value = "listAllParts", notes = "List resources linked with hasPart", response = play.mvc.Result.class, httpMethod = "GET")
     public static Promise<Result> listAllPartsAsRdf(@PathParam("pid") String pid) {
 	return new ReadMetadataAction().call(pid, node -> {
+	    List<Node> result = read.getParts(node);
+	    return asRdf(result);
+	});
+    }
+
+    @ApiOperation(produces = "application/json", nickname = "listAllPartsAsJson", value = "listAllPartsAsJson", notes = "List resources linked with hasPart", response = play.mvc.Result.class, httpMethod = "GET")
+    public static Promise<Result> listAllPartsAsJson(
+	    @PathParam("pid") String pid, @QueryParam("style") String style) {
+	return new ReadMetadataAction().call(pid, node -> {
 	    try {
-		List<Node> result = read.getParts(node);
-		return asRdf(result);
+		Map<String, Object> result = read.getPartsAsTree(node, style);
+		return asJson(result);
 	    } catch (Exception e) {
 		return JsonMessage(new Message(e, 500));
 	    }
@@ -635,15 +625,10 @@ public class Resource extends MyController {
     @ApiOperation(produces = "application/html", nickname = "asHtml", value = "asHtml", notes = "Returns a html display of the resource", response = Message.class, httpMethod = "GET")
     public static Promise<Result> asHtml(@PathParam("pid") String pid) {
 	return new ReadMetadataAction().call(pid, node -> {
-	    try {
-		List<Node> nodes = new ArrayList<Node>();
-		nodes.add(node);
-		response()
-			.setHeader("Content-Type", "text/html; charset=utf-8");
-		return ok(resource.render(json(nodes).toString()));
-	    } catch (Exception e) {
-		return JsonMessage(new Message(e, 500));
-	    }
+	    List<Node> nodes = new ArrayList<Node>();
+	    nodes.add(node);
+	    response().setHeader("Content-Type", "text/html; charset=utf-8");
+	    return ok(resource.render(json(nodes).toString()));
 	});
     }
 
@@ -728,19 +713,15 @@ public class Resource extends MyController {
 	return new ModifyAction().call(pid, node -> {
 	    String result = modify.makeOAISet(node);
 	    response().setContentType("text/plain");
-	    return ok(result);
+	    return JsonMessage(new Message(result));
 	});
     }
 
     @ApiOperation(produces = "application/json", nickname = "moveUp", value = "moveUp", notes = "Moves the resource to the parents parent. If parent has no parent, a HTTP 406 will be replied.", response = String.class, httpMethod = "POST")
     public static Promise<Result> moveUp(@PathParam("pid") String pid) {
 	return new ModifyAction().call(pid, node -> {
-	    try {
-		Node result = modify.moveUp(node);
-		return getJsonResult(result);
-	    } catch (Exception e) {
-		return JsonMessage(new Message(e, 500));
-	    }
+	    Node result = modify.moveUp(node);
+	    return JsonMessage(new Message(json(result)));
 	});
     }
 
@@ -751,7 +732,7 @@ public class Resource extends MyController {
 	return new ModifyAction().call(pid, node -> {
 	    try {
 		Node result = modify.copyMetadata(node, field, copySource);
-		return getJsonResult(result);
+		return JsonMessage(new Message(json(result)));
 	    } catch (Exception e) {
 		return JsonMessage(new Message(e, 500));
 	    }
@@ -763,7 +744,7 @@ public class Resource extends MyController {
 	return new ModifyAction().call(pid, node -> {
 	    try {
 		Node result = modify.flatten(node);
-		return getJsonResult(result);
+		return JsonMessage(new Message(json(result)));
 	    } catch (Exception e) {
 		return JsonMessage(new Message(e, 500));
 	    }
@@ -891,7 +872,8 @@ public class Resource extends MyController {
     public static Promise<Result> addDoi(@PathParam("pid") String pid) {
 	return new ModifyAction().call(pid, node -> {
 	    try {
-		return getJsonResult(modify.addDoi(node));
+		Map<String, Object> result = modify.addDoi(node);
+		return JsonMessage(new Message(json(result)));
 	    } catch (HttpArchiveException e) {
 		return HtmlMessage(new Message(e, e.getCode()));
 	    } catch (Exception e) {
@@ -904,9 +886,8 @@ public class Resource extends MyController {
     public static Promise<Result> updateDoi(@PathParam("pid") String pid) {
 	return new ModifyAction().call(pid, node -> {
 	    try {
-
-		return getJsonResult(modify.updateDoi(node));
-
+		Map<String, Object> result = modify.updateDoi(node);
+		return JsonMessage(new Message(json(result)));
 	    } catch (HttpArchiveException e) {
 		return HtmlMessage(new Message(e, e.getCode()));
 	    } catch (Exception e) {

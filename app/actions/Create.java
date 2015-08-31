@@ -111,12 +111,12 @@ public class Create extends RegalAction {
     private void setNodeMembers(Node node, RegalObject object) {
 	if (object.getContentType() != null)
 	    setNodeType(object.getContentType(), node);
-	if (object.getParentPid() != null)
-	    linkWithParent(object.getParentPid(), node);
 	if (object.getAccessScheme() != null)
 	    node.setAccessScheme(object.getAccessScheme());
 	if (object.getPublishScheme() != null)
 	    node.setPublishScheme(object.getPublishScheme());
+	if (object.getParentPid() != null)
+	    linkWithParent(object.getParentPid(), node);
 	if (object.getIsDescribedBy().getCreatedBy() != null)
 	    node.setCreatedBy(object.getIsDescribedBy().getCreatedBy());
 	if (object.getIsDescribedBy().getImportedFrom() != null)
@@ -135,9 +135,9 @@ public class Create extends RegalAction {
 
     private void overrideNodeMembers(Node node, RegalObject object) {
 	setNodeType(object.getContentType(), node);
-	linkWithParent(object.getParentPid(), node);
 	node.setAccessScheme(object.getAccessScheme());
 	node.setPublishScheme(object.getPublishScheme());
+	linkWithParent(object.getParentPid(), node);
 	node.setCreatedBy(object.getIsDescribedBy().getCreatedBy());
 	node.setImportedFrom(object.getIsDescribedBy().getImportedFrom());
 	node.setLegacyId(object.getIsDescribedBy().getLegacyId());
@@ -154,22 +154,46 @@ public class Create extends RegalAction {
 
     private void linkWithParent(String parentPid, Node node) {
 	try {
-	    String pp = node.getParentPid();
-	    if (pp != null && !pp.isEmpty()) {
-		try {
-		    Globals.fedora.unlinkParent(node);
-		    updateIndex(pp);
-		} catch (HttpArchiveException e) {
-		    play.Logger.debug("", e);
-		}
-	    }
-	    Globals.fedora.linkToParent(node, parentPid);
-	    Globals.fedora.linkParentToNode(parentPid, node.getPid());
-	    updateIndex(node.getPid());
+	    Node parent = new Read().readNode(parentPid);
+	    unlinkOldParent(node);
+	    linkToNewParent(parent, node);
+	    inheritTitle(parent, node);
+	    inheritRights(parent, node);
 	    updateIndex(parentPid);
 	} catch (Exception e) {
 	    play.Logger.debug("", e);
 	}
+    }
+
+    private void inheritTitle(Node from, Node to) {
+	String title = new Read().readMetadata(to, "title");
+	String parentTitle = new Read().readMetadata(from, "title");
+	if (title == null && parentTitle != null) {
+	    new Modify().addMetadataField(to,
+		    Globals.profile.nMap.get("title").uri, parentTitle);
+	}
+    }
+
+    private void linkToNewParent(Node parent, Node child) {
+	Globals.fedora.linkToParent(child, parent.getPid());
+	Globals.fedora.linkParentToNode(parent.getPid(), child.getPid());
+    }
+
+    private void unlinkOldParent(Node node) {
+	String pp = node.getParentPid();
+	if (pp != null && !pp.isEmpty()) {
+	    try {
+		Globals.fedora.unlinkParent(node);
+		updateIndex(pp);
+	    } catch (HttpArchiveException e) {
+		play.Logger.debug("", e);
+	    }
+	}
+    }
+
+    private void inheritRights(Node from, Node to) {
+	to.setAccessScheme(from.getAccessScheme());
+	to.setPublishScheme(from.getPublishScheme());
     }
 
     private void updateTransformer(List<String> transformers, Node node) {

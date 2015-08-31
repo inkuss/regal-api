@@ -16,6 +16,9 @@
  */
 package actions;
 
+import helper.HttpArchiveError;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +36,7 @@ public class BulkAction {
     Chunks.Out<String> messageOut;
     Chunks<String> chunks;
     Read read = new Read();
+    List<Throwable> errors = new ArrayList<Throwable>();
 
     /**
      * @param namespace
@@ -136,12 +140,26 @@ public class BulkAction {
 			    from, until))));
 		} catch (Exception e) {
 		    play.Logger.warn("", e);
+		    errors.add(e);
+		} catch (HttpArchiveError e) {
+		    play.Logger.warn("", e);
+		    errors.add(e);
 		}
 	    } while (until < nodes.size());
-	    messageOut.write("Process " + nodes.size() + " nodes!");
-	    messageOut.write("\nSuccessfully Finished\n");
+	    messageOut.write("Process " + nodes.size() + " nodes!\n");
+	    if (!errors.isEmpty()) {
+		messageOut.write(errors.size() + " errors occured!\n" + errors
+			+ "\n");
+	    } else {
+		messageOut.write("\nSuccessfully Finished\n");
+	    }
+
 	} catch (Exception e) {
 	    play.Logger.error("", e);
+	    errors.add(e);
+	} catch (HttpArchiveError e) {
+	    play.Logger.warn("", e);
+	    errors.add(e);
 	} finally {
 	    messageOut.close();
 	}
@@ -168,12 +186,25 @@ public class BulkAction {
 		    messageOut.write(proc.process(sublist));
 		} catch (Exception e) {
 		    play.Logger.warn("", e);
+		    errors.add(e);
+		} catch (HttpArchiveError e) {
+		    play.Logger.warn("", e);
+		    errors.add(e);
 		}
 	    } while (until < nodes.size());
-	    messageOut.write("Process " + nodes.size() + " nodes!");
-	    messageOut.write("\nSuccessfully Finished\n");
+	    messageOut.write("Process " + nodes.size() + " nodes!\n");
+	    if (!errors.isEmpty()) {
+		messageOut.write(errors.size() + " errors occured!\n" + errors
+			+ "\n");
+	    } else {
+		messageOut.write("\nSuccessfully Finished\n");
+	    }
 	} catch (Exception e) {
 	    play.Logger.error("", e);
+	    errors.add(e);
+	} catch (HttpArchiveError e) {
+	    play.Logger.warn("", e);
+	    errors.add(e);
 	} finally {
 	    messageOut.close();
 	}
@@ -201,5 +232,9 @@ public class BulkAction {
      */
     public Chunks<String> getChunks() {
 	return chunks;
+    }
+
+    public List<Throwable> getErrors() {
+	return errors;
     }
 }

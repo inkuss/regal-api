@@ -40,7 +40,7 @@ public class UrnAllocator implements Runnable {
     @Override
     public void run() {
 	Calendar cal = Calendar.getInstance();
-	cal.add(Calendar.DATE, -7);
+	cal.add(Calendar.DATE, -6);
 	Date until = cal.getTime();
 
 	cal = Calendar.getInstance();

@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -198,7 +199,6 @@ public class Modify extends RegalAction {
 		    node.setDoi(dois.get(0));
 		}
 	    }
-	    updateTransformer(node.getTransformer(), node);
 	    Globals.fedora.updateNode(node);
 	    reindexNodeAndParent(node);
 	    return pid + " metadata successfully updated!";
@@ -207,11 +207,6 @@ public class Modify extends RegalAction {
 	} catch (IOException e) {
 	    throw new UpdateNodeException(e);
 	}
-    }
-
-    private void updateTransformer(List<Transformer> transformer, Node node) {
-	// TODO Auto-generated method stub
-
     }
 
     private void reindexNodeAndParent(Node node) {
@@ -265,19 +260,13 @@ public class Modify extends RegalAction {
      */
     String addUrn(Node node, String snid) {
 	String subject = node.getPid();
-	String hasUrn = "http://purl.org/lobid/lv#urn";
-	String metadata = node.getMetadata();
 	if (node.hasUrn())
 	    throw new HttpArchiveException(409, subject
 		    + " already has a urn. Leave unmodified!");
+	String hasUrn = "http://purl.org/lobid/lv#urn";
 	String urn = generateUrn(subject, snid);
-	metadata = RdfUtils.addTriple(subject, hasUrn, urn, true, metadata,
-		RDFFormat.NTRIPLES);
 	node.addTransformer(new Transformer("epicur"));
-	updateMetadata(node, metadata);
-	node = new Read().readNode(node.getPid());
-	makeOAISet(node);
-	return "Update " + subject + "! Urn has been added.";
+	return addMetadataField(node, hasUrn, urn);
     }
 
     /**
@@ -326,7 +315,7 @@ public class Modify extends RegalAction {
 		return addUrn(n, snid);
 	    }
 	}
-	return "\n Not Updated " + n.getPid() + " " + n.getCreationDate()
+	return "Not Updated " + n.getPid() + " " + n.getCreationDate()
 		+ " is not before " + fromBefore + " or contentType "
 		+ contentType + " is not allowed to carry urn.";
     }
@@ -350,7 +339,7 @@ public class Modify extends RegalAction {
 		    return MyController.mapper.writeValueAsString(addDoi(n));
 		}
 	    }
-	    return "\n Not Updated " + n.getPid() + " " + n.getCreationDate()
+	    return "Not Updated " + n.getPid() + " " + n.getCreationDate()
 		    + " is not before " + fromBefore + " or contentType "
 		    + contentType + " is not allowed to carry urn.";
 	} catch (Exception e) {
@@ -711,4 +700,38 @@ public class Modify extends RegalAction {
 	return doi;
     }
 
+    public String addMetadataField(Node node, String pred, String obj) {
+	String metadata = node.getMetadata();
+	metadata = RdfUtils.addTriple(node.getPid(), pred, obj, true, metadata,
+		RDFFormat.NTRIPLES);
+	updateMetadata(node, metadata);
+	node = new Read().readNode(node.getPid());
+	makeOAISet(node);
+	return "Update " + node.getPid() + "! " + pred + " has been added.";
+
+    }
+
+    public Map<String, Object> setObjectTimestamp(Node node) {
+	Map<String, Object> result = new HashMap<String, Object>();
+	try {
+	    Date date = new Date();
+	    SimpleDateFormat dateFormat = new SimpleDateFormat(
+		    "yyyy-MM-dd'T'HH:mm:ssZ");
+	    String content = dateFormat.format(date);
+	    File file = CopyUtils.copyStringToFile(content);
+	    node.setObjectTimestampFile(file.getAbsolutePath());
+	    result.put("pid", node.getPid());
+	    result.put("timestamp", content);
+	    Globals.fedora.updateNode(node);
+	    String pp = node.getParentPid();
+	    if (pp != null) {
+		Node parent = new Read().readNode(pp);
+		result.put("parent", setObjectTimestamp(parent));
+	    }
+	    updateIndex(node.getPid());
+	    return result;
+	} catch (IOException e) {
+	    throw new HttpArchiveException(500, e);
+	}
+    }
 }

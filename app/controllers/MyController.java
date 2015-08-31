@@ -16,20 +16,18 @@
  */
 package controllers;
 
+import helper.HttpArchiveError;
 import helper.HttpArchiveException;
 
+import java.io.IOException;
 import java.io.StringWriter;
-import java.net.InetAddress;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.culturegraph.mf.morph.functions.Regexp;
 
 import models.Globals;
 import models.Message;
@@ -47,7 +45,6 @@ import actions.Read;
 import actions.Transform;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.net.InetAddresses;
 import com.wordnik.swagger.core.util.JsonUtil;
 
 /**
@@ -162,11 +159,15 @@ public class MyController extends Controller {
 	}
     }
 
-    protected static String json(Object obj) throws Exception {
-	StringWriter w = new StringWriter();
-	mapper.writeValue(w, obj);
-	String result = w.toString();
-	return result;
+    protected static String json(Object obj) {
+	try {
+	    StringWriter w = new StringWriter();
+	    mapper.writeValue(w, obj);
+	    String result = w.toString();
+	    return result;
+	} catch (IOException e) {
+	    throw new HttpArchiveException(500, e);
+	}
     }
 
     /**
@@ -325,6 +326,11 @@ public class MyController extends Controller {
 				return HtmlMessage(new Message(e, e.getCode()));
 			    }
 			    return JsonMessage(new Message(e, e.getCode()));
+			} catch (HttpArchiveError e) {
+			    if (request().accepts("text/html")) {
+				return HtmlMessage(new Message(e, e.getCode()));
+			    }
+			    return JsonMessage(new Message(e, e.getCode()));
 			} catch (Exception e) {
 			    if (request().accepts("text/html")) {
 				return HtmlMessage(new Message(e, 500));
@@ -356,6 +362,8 @@ public class MyController extends Controller {
 		    return ca.exec(node);
 		} catch (HttpArchiveException e) {
 		    return JsonMessage(new Message(e, e.getCode()));
+		} catch (HttpArchiveError e) {
+		    return JsonMessage(new Message(e, e.getCode()));
 		} catch (Exception e) {
 		    return JsonMessage(new Message(e, 500));
 		}
@@ -380,6 +388,8 @@ public class MyController extends Controller {
 		    return ca.exec(request().getHeader("UserId"));
 		} catch (HttpArchiveException e) {
 		    return JsonMessage(new Message(e, e.getCode()));
+		} catch (HttpArchiveError e) {
+		    return JsonMessage(new Message(e, e.getCode()));
 		} catch (Exception e) {
 		    return JsonMessage(new Message(e, 500));
 		}
@@ -393,33 +403,42 @@ public class MyController extends Controller {
      */
     public static class ModifyAction {
 	Promise<Result> call(String pid, NodeAction ca) {
-	    return Promise.promise(() -> {
-		String userId = "0";
-		try {
-		    String role = (String) Http.Context.current().args
-			    .get("role");
-		    userId = request().getHeader("UserId");
-		    play.Logger.debug("Try to access with role: " + role
-			    + "and user id " + userId);
-		    if (!modifyingAccessIsAllowed(role)) {
-			return AccessDenied();
-		    }
-		    Node node = null;
-		    try {
-			node = read.internalReadNode(pid);
-			node.setLastModifiedBy(userId);
-		    } catch (Exception e) {
-			play.Logger.debug(
-				"Try to modify resource that can not be read!",
-				e);
-		    }
-		    return ca.exec(node);
-		} catch (HttpArchiveException e) {
-		    return JsonMessage(new Message(e, e.getCode()));
-		} catch (Exception e) {
-		    return JsonMessage(new Message(e, 500));
-		}
-	    });
+	    return Promise
+		    .promise(() -> {
+			String userId = "0";
+			try {
+			    String role = (String) Http.Context.current().args
+				    .get("role");
+			    userId = request().getHeader("UserId");
+			    play.Logger.debug("Try to access with role: "
+				    + role + "and user id " + userId);
+			    if (!modifyingAccessIsAllowed(role)) {
+				return AccessDenied();
+			    }
+			    Node node = null;
+			    try {
+				node = read.internalReadNode(pid);
+				node.setLastModifiedBy(userId);
+			    } catch (Exception e) {
+				play.Logger
+					.debug("Try to modify resource that can not be read!",
+						e);
+			    }
+
+			    Result result = ca.exec(node);
+			    if (userId != null && !userId.equals("0")
+				    && !userId.equals("1")
+				    && !userId.equals("UrnAllocator")) {
+				play.Logger.info(json(modify
+					.setObjectTimestamp(node)));
+			    }
+			    return result;
+			} catch (HttpArchiveException e) {
+			    return JsonMessage(new Message(e, e.getCode()));
+			} catch (Exception e) {
+			    return JsonMessage(new Message(e, 500));
+			}
+		    });
 	}
     }
 
@@ -438,6 +457,8 @@ public class MyController extends Controller {
 		    }
 		    return ca.exec(request().getHeader("UserId"));
 		} catch (HttpArchiveException e) {
+		    return JsonMessage(new Message(e, e.getCode()));
+		} catch (HttpArchiveError e) {
 		    return JsonMessage(new Message(e, e.getCode()));
 		} catch (Exception e) {
 		    return JsonMessage(new Message(e, 500));
@@ -461,6 +482,8 @@ public class MyController extends Controller {
 		    }
 		    return ca.exec(request().getHeader("UserId"));
 		} catch (HttpArchiveException e) {
+		    return JsonMessage(new Message(e, e.getCode()));
+		} catch (HttpArchiveError e) {
 		    return JsonMessage(new Message(e, e.getCode()));
 		} catch (Exception e) {
 		    return JsonMessage(new Message(e, 500));

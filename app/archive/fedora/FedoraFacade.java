@@ -212,11 +212,12 @@ class FedoraFacade implements FedoraInterface {
 	    if (node.getUploadFile() != null) {
 		utils.createManagedStream(node);
 	    }
-	    if (node.getMetadataFile() != null) {
-		utils.createMetadataStream(node);
-	    }
+
 	    if (node.getSeqFile() != null) {
 		utils.createSeqStream(node);
+	    }
+	    if (node.getObjectTimestampFile() != null) {
+		utils.createObjectTimestampStream(node);
 	    }
 	    // utils.createRelsExt(node);
 	    utils.updateRelsExt(node);
@@ -251,7 +252,19 @@ class FedoraFacade implements FedoraInterface {
 	getChecksumFromFedora(node);
 	getMetadataFromFedora(node);
 	getDataFromFedora(pid, node);
+	getObjectTimestampFromFedora(node);
 	return node;
+    }
+
+    private void getObjectTimestampFromFedora(Node node) {
+	try {
+	    FedoraResponse response = new GetDatastreamDissemination(
+		    node.getPid(), "objectTimestamp").execute();
+	    node.setObjectTimestamp(CopyUtils.copyToString(
+		    response.getEntityInputStream(), "utf-8"));
+	} catch (Exception e) {
+	    // datastream with name metadata is optional
+	}
     }
 
     private void getDataFromFedora(String pid, Node node) {
@@ -320,6 +333,9 @@ class FedoraFacade implements FedoraInterface {
 	}
 	if (node.getSeqFile() != null) {
 	    utils.updateSeqStream(node);
+	}
+	if (node.getObjectTimestampFile() != null) {
+	    utils.updateObjectTimestampStream(node);
 	}
 	utils.linkContentModels(models, node);
 	utils.updateRelsExt(node);
