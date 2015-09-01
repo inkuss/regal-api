@@ -1,29 +1,54 @@
 @* Copyright 2014 Jan Schnasse, hbz. Licensed under the Apache License 2.0 *@
 
-@(hit: play.api.libs.json.JsValue)
-@import play.api.libs.json._
-@import com.fasterxml.jackson.databind.JsonNode
+@(hit: Map[String,Object],context:Map[String,Object],namespace:String)
 
 <table class="table table-striped table-condensed">
-@for(k <- (hit \ "@context").as[JsObject].keys.toSeq.sorted){
-		@tableRow((hit \ "@context" \ k \ "label"),k,hit)
-}
+	@context match{
+		case map : Map[String,Object] => {
+			@for(k<-map.keys){
+				@tableRow(k,hit)
+			}
+		}
+		case _ => {}
+	}
 </table>
 
-@analyseValue(v: String)={
-	@v match {
-		case a if v.startsWith("http") => {
-			@v
+@htmlRow(values: Any,key: String)={
+	@values match {
+		case a: String => {
+			<tr>
+				<td><a href=@getFieldId(key)>@getLabel(key)</a></td>
+				<td>
+					@value(a)
+				</td>
+			</tr>
+  		}
+		case b: List[Any] => {
+			<tr>
+				<td><a href=@getFieldId(key)>@getLabel(key)</a></td>
+				<td>
+					@for(field <- b){
+						@value(field)
+					}
+				</td>
+			</tr>
 		}
-		case a if v.startsWith("edoweb") => {
-			/resource/@v
+		case c : Map[String,Object] => {
+			<tr>
+				<td><a href=@getFieldId(key)>@getLabel(key)</a></td>
+				<td>
+					<table class="table table-striped table-condensed">
+					 @for((k,v)<-c){
+					  @htmlRow(v,k.asInstanceOf[String])
+					  }
+					</table>
+				</td>
+			</tr>
 		}
-		case _ => {
-			@v
-		}
+		
+		case _ => {}
 	}
 }
-
 @analyseString(v: String)={
 	@v match {
 		case a if v.startsWith("http") => {
@@ -38,17 +63,31 @@
 	}
 }
 
-@value(value: JsValue)= {
-	@value match {
-		case a: JsString => {
-			@analyseString(value.as[String])
+@analyseValue(v: String)={
+	@v match {
+		case a if v.startsWith("http") => {
+			@v
 		}
-		case b: JsObject => {
-			<span class="@models.Globals.profile.getIcon(((value \ "@id").asOpt[String].getOrElse("")))"></span>
-			<a href=@analyseValue((value \ "@id").asOpt[String].getOrElse(""))>
-			@((value \ "prefLabel").asOpt[String].getOrElse(value.asOpt[String]))
+		case a if v.startsWith(namespace) => {
+			/resource/@v
+		}
+		case _ => {
+			@v
+		}
+	}
+}
+
+@value(value: Any)= {
+	@value match {
+		case a: String => {
+			@analyseString(value.asInstanceOf[String])
+		}
+		case b: Map[String,Object] => {
+			<span class="@models.Globals.profile.getIcon(b.get("@id").asInstanceOf[String])"></span>
+			<a href=@analyseValue(b.get("@id").asInstanceOf[String])>
+			@(b.get("prefLabel"))
 			</a> |
-			<a title="Ähnliche Objekte suchen" href=/find?q="@helper.urlEncode((value \ "@id").asOpt[String].getOrElse(value.as[String]))">
+			<a title="Ähnliche Objekte suchen" href=/find?q="@helper.urlEncode(b.get("@id").asInstanceOf[String])">
 				<span class="glyphicon glyphicon-link"></span>
 			</a>
 		}
@@ -57,43 +96,39 @@
 	<br/>
 }
 
-
-@htmlRow(values: JsValue,label: String, fieldId: String,hit: JsValue)={
-	@values match {
-		case a: JsString => {
-			<tr>
-				<td><a href=@fieldId>@label</a></td>
-				<td>
-					@value(values)
-				</td>
-			</tr>
-  		}
-		case b: JsArray => {
-			<tr>
-				<td><a href=@fieldId>@label</a></td>
-				<td>
-			@for(field <- values.asOpt[Seq[JsValue]].getOrElse(Seq())){
-				@value(field)
-			}
-				</td>
-			</tr>
-		}
-		case c : JsObject => {
-			<tr>
-				<td><a href=@fieldId>@label</a></td>
-				<td>
-					<table class="table table-striped table-condensed">
-					@for((k,v) <- values.as[JsObject].value){
-						@htmlRow(v,(hit \ "@context" \ k \ "label").asOpt[String].getOrElse(k),fieldId,hit)
+@getLabel(key: String)={
+		@context match{
+			case map : Map[String,Object] => {
+				@map.get(key) match { 
+					case keyMap : Map[String,Object]=> {
+						@keyMap.get("label") match {
+						 case label: String =>{
+						 	@label
+						 }
+						 case _ => {@key}
+						}
 					}
-					</table>
-				</td>
-			</tr>
-		}
-		case _ => {}
+					case _ => {@key}
+				}
+			}
+			case _ => {@key}
 	}
 }
 
-@tableRow(label: JsValue,name: String,hit:JsValue ) = {
-@htmlRow((hit \ name),label.asOpt[String].getOrElse(name),(hit \ "@context" \ name \ "@id").asOpt[String].getOrElse(""),hit)
+@getFieldId(key: String)={
+		@context match{
+			case map : Map[String,Object] => {
+				@map.get(key) match { 
+					case keyMap : Map[String,Object]=> {
+						@keyMap.get("@id")
+					}
+					case _ => {@key}
+					
+				}
+			}
+			case _ => {@key}
+		}
+}
+@tableRow(key: String,hit:Map[String,Object]) = {
+@htmlRow(hit.get(key), key)
 }

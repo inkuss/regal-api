@@ -1,10 +1,11 @@
+sudo: false
 language: java
 env:
-  - PLAY_VERSION=2.2.3
+  - ACTIVATOR_VERSION=1.3.5
 jdk: oraclejdk8
-install:
-  - mvn org.nanoko.playframework:play2-maven-plugin:install-play -Dplay2version=2.2.3 -Dplay2basedir=${HOME}/local/opt/regal
-  - mvn play2:start
-  - mvn play2:start
+before_script:
+  - wget http://downloads.typesafe.com/typesafe-activator/${ACTIVATOR_VERSION}/typesafe-activator-${ACTIVATOR_VERSION}-minimal.zip
+  - unzip typesafe-activator-${ACTIVATOR_VERSION}-minimal.zip
 script:
-  - mvn clean install -DskipTests
+  - ./activator-${ACTIVATOR_VERSION}-minimal/activator "testOnly ApplicationTest"
+  - ./activator-${ACTIVATOR_VERSION}-minimal/activator "testOnly archive.search.SearchTest"

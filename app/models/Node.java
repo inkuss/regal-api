@@ -34,7 +34,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import java.util.TreeMap;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
@@ -846,7 +847,7 @@ public class Node {
     @JsonValue
     public Map<String, Object> getLd() {
 	List<Link> ls = getLinks();
-	Map<String, Object> rdf = new HashMap<String, Object>();
+	Map<String, Object> rdf = new TreeMap<String, Object>();
 	rdf.put("@id", getPid());
 	rdf.put("primaryTopic", getPid());
 	for (Link l : ls) {
@@ -871,7 +872,7 @@ public class Node {
 	if (fulltext != null)
 	    rdf.put("fulltext-ocr", fulltext);
 
-	HashMap<String, Object> aboutMap = new HashMap<String, Object>();
+	Map<String, Object> aboutMap = new TreeMap<String, Object>();
 	aboutMap.put("@id", this.getAggregationUri() + ".rdf");
 	if (createdBy != null)
 	    aboutMap.put("createdBy", getCreatedBy());
@@ -900,12 +901,12 @@ public class Node {
 	    rdf.put("parentPid", parentPid);
 
 	if (getMimeType() != null && !getMimeType().isEmpty()) {
-	    Map<String, Object> hasDataMap = new HashMap<String, Object>();
+	    Map<String, Object> hasDataMap = new TreeMap<String, Object>();
 	    hasDataMap.put("@id", getDataUri());
 	    hasDataMap.put("format", getMimeType());
 	    hasDataMap.put("size", getFileSize());
 	    if (getChecksum() != null) {
-		Map<String, Object> checksum = new HashMap<String, Object>();
+		Map<String, Object> checksum = new TreeMap<String, Object>();
 		checksum.put("checksumValue", getChecksum());
 		checksum.put("generator", "http://en.wikipedia.org/wiki/MD5");
 		checksum.put("type",

@@ -16,4 +16,5 @@ log
 data
 .settings
 .classpath
+.project
 bin

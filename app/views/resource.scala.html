@@ -1,30 +1,26 @@
 @* Copyright 2014 Jan Schnasse, hbz. Licensed under the Apache License 2.0 *@
-@(js: String)
-
-@import play.api.libs.json._
-@import com.fasterxml.jackson.databind.JsonNode
-
+@(hits: List[Map[String,Object]],namespace: String)
 
 @main("") {
-	@defining(Json.parse(js).asOpt[Seq[JsValue]].getOrElse(Seq())) { hits =>
+
 		@for( hit <- hits){
 <div class="container">
 
 	<div class="row">
 		<div class="col-md-12">
-			<h1><a href=/resource/@((hit \ "@id").asOpt[String].getOrElse(""))>@((hit \ "title").asOpt[Seq[String]].getOrElse("No title"))</a></h1>
+			<h1><a href=/resource/@hit.get("@id")>@hit.get("title")</a></h1>
 		</div>
 		
 	</div>
 <div class="row">
 		<div class="col-md-7"></div>
-	<div class="col-md-5">@tags.selectSourceRadios((hit \ "@id").asOpt[String].getOrElse(""),"repo")</div>
+	<div class="col-md-5">@tags.selectSourceRadios(hit.get("@id").asInstanceOf[String],"repo")</div>
 	</div>
 </div>
 <div class="container-fluid">
 <div class="row">
 	<div  class="col-md-11">
-		@tags.resourceView(hit)
+		@tags.resourceView(hit,hit.get("@context").asInstanceOf[Map[String,Object]],namespace)
 	</div>
 <div class="col-md-1">
 <button type="button" class="btn btn-default" disabled ><span class="fa fa-edit"/>
@@ -36,6 +32,8 @@
 </div>
 <div>
 </div>
-		}
+		
 	}
 }
+
+

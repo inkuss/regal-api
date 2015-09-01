@@ -21,7 +21,7 @@ import play.Play;
 import play.libs.F;
 import play.mvc.Action;
 import play.mvc.Http;
-import play.mvc.SimpleResult;
+import play.mvc.Result;
 
 /**
  * @author Jan Schnasse, schnasse@hbz-nrw.de
@@ -36,7 +36,7 @@ public class BasicAuthAction extends Action<BasicAuth> {
     private static final String REALM = "Basic realm=\"Please enter edoweb-anonymous with any password for guest access\"";
 
     @Override
-    public F.Promise<SimpleResult> call(Http.Context context) throws Throwable {
+    public F.Promise<Result> call(Http.Context context) throws Throwable {
 
 	String authHeader = context.request().getHeader(AUTHORIZATION);
 	if (authHeader == null) {
@@ -76,11 +76,11 @@ public class BasicAuthAction extends Action<BasicAuth> {
 
     }
 
-    private play.libs.F.Promise<SimpleResult> unauthorized(Http.Context context) {
+    private play.libs.F.Promise<Result> unauthorized(Http.Context context) {
 	context.response().setHeader(WWW_AUTHENTICATE, REALM);
-	return F.Promise.promise(new F.Function0<SimpleResult>() {
+	return F.Promise.promise(new F.Function0<Result>() {
 	    @Override
-	    public SimpleResult apply() throws Throwable {
+	    public Result apply() throws Throwable {
 		return unauthorized();
 	    }
 	});

@@ -82,14 +82,14 @@ DELETE /resource 					controllers.Resource.deleteResources(namespace?="",purge?=
 POST /resource/:pid/oaisets			controllers.Resource.updateOaiSets(pid)
 	
 # Swagger - Root Resources Listing
-GET /api-docs 						controllers.ApiHelpController.getResources
+#GET /api-docs 						@controllers.ApiHelpController.getResources
 
 #OPTIONS to support hosting UI off domain
 #OPTIONS /*wholepath controllers.Resource.getOptions(wholepath)
 
-GET /api-docs/utils 				controllers.ApiHelpController.getResource(path = "/utils")
-GET /api-docs/resource 				controllers.ApiHelpController.getResource(path = "/resource")
-GET /api-docs/resourceIndex 		controllers.ApiHelpController.getResource(path = "/resourceIndex")
+#GET /api-docs/utils 				@controllers.ApiHelpController.getResource(path = "/utils")
+#GET /api-docs/resource 			@controllers.ApiHelpController.getResource(path = "/resource")
+#GET /api-docs/resourceIndex 		@controllers.ApiHelpController.getResource(path = "/resourceIndex")
 
 POST /utils/index/:pid 				controllers.MyUtils.index(pid,index?="")
 POST /utils/indexAll 				controllers.MyUtils.indexAll(index?="")

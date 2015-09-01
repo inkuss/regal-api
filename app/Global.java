@@ -29,7 +29,7 @@ import play.libs.F.Promise;
 import play.mvc.Action;
 import play.mvc.Http.Request;
 import play.mvc.Http.RequestHeader;
-import play.mvc.SimpleResult;
+import play.mvc.Result;
 
 /**
  * @author Jan Schnasse
@@ -51,8 +51,8 @@ public class Global extends GlobalSettings {
 	Globals.taskManager.shutdown();
     }
 
-    public Promise<SimpleResult> onHandlerNotFound(RequestHeader request) {
-	return Promise.<SimpleResult> pure(notFound("Action not found "
+    public Promise<Result> onHandlerNotFound(RequestHeader request) {
+	return Promise.<Result> pure(notFound("Action not found "
 		+ request.uri()));
     }
 
