@@ -198,11 +198,14 @@ public class Create extends RegalAction {
 
     private void updateTransformer(List<String> transformers, Node node) {
 	node.removeAllContentModels();
-
+	String type = node.getContentType();
 	if ("public".equals(node.getPublishScheme())) {
 	    node.addTransformer(new Transformer("oaidc"));
+	    if ("monograph".equals(type) || "journal".equals(type)
+		    || "webpage".equals(type)) {
+		node.addTransformer(new Transformer("mets"));
+	    }
 	}
-	String type = node.getContentType();
 	if (node.hasUrn()) {
 	    node.addTransformer(new Transformer("epicur"));
 	    if ("monograph".equals(type) || "journal".equals(type)
@@ -211,7 +214,6 @@ public class Create extends RegalAction {
 		    node.addTransformer(new Transformer("aleph"));
 		}
 	}
-
 	if (transformers != null) {
 	    for (String t : transformers) {
 		if ("oaidc".equals(t))
@@ -219,6 +221,8 @@ public class Create extends RegalAction {
 		if ("epicur".equals(t))
 		    continue; // implicitly added - or not allowed to set
 		if ("aleph".equals(t))
+		    continue; // implicitly added - or not allowed to set
+		if ("mets".equals(t))
 		    continue; // implicitly added - or not allowed to set
 		node.addTransformer(new Transformer(t));
 	    }

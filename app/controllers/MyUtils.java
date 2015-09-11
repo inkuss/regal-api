@@ -159,27 +159,40 @@ public class MyUtils extends MyController {
     public static Promise<Result> initContentModels(
 	    @DefaultValue("") @QueryParam("namespace") String namespace) {
 	return new BulkActionAccessor().call((userId) -> {
+
+	    int port = getPort();
 	    List<Transformer> transformers = new Vector<Transformer>();
 	    transformers.add(new Transformer(namespace + "epicur", "epicur",
-		    "http://edoweb-anonymous:nopwd@" + "localhost:9000"
+		    "http://edoweb-anonymous:nopwd@" + "localhost:" + port
 			    + "/resource/(pid)." + namespace + "epicur"));
 	    transformers.add(new Transformer(namespace + "oaidc", "oaidc",
-		    "http://edoweb-anonymous:nopwd@" + "localhost:9000"
+		    "http://edoweb-anonymous:nopwd@" + "localhost:" + port
 			    + "/resource/(pid)." + namespace + "oaidc"));
 	    transformers.add(new Transformer(namespace + "pdfa", "pdfa",
-		    "http://edoweb-anonymous:nopwd@" + "localhost:9000"
+		    "http://edoweb-anonymous:nopwd@" + "localhost:" + port
 			    + "/resource/(pid)." + namespace + "pdfa"));
 	    transformers.add(new Transformer(namespace + "pdfbox", "pdfbox",
-		    "http://edoweb-anonymous:nopwd@" + "localhost:9000"
+		    "http://edoweb-anonymous:nopwd@" + "localhost:" + port
 			    + "/resource/(pid)." + namespace + "pdfbox"));
 	    transformers.add(new Transformer(namespace + "aleph", "aleph",
-		    "http://edoweb-anonymous:nopwd@" + "localhost:9000"
+		    "http://edoweb-anonymous:nopwd@" + "localhost:" + port
 			    + "/resource/(pid)." + namespace + "aleph"));
+	    transformers.add(new Transformer(namespace + "mets", "mets",
+		    "http://edoweb-anonymous:nopwd@" + "localhost:" + port
+			    + "/resource/(pid)." + namespace + "mets"));
 	    create.contentModelsInit(transformers);
 	    String result = "Reinit contentModels " + namespace + "epicur, "
 		    + namespace + "oaidc, " + namespace + "pdfa, " + namespace
-		    + "pdfbox, " + namespace + "aleph";
+		    + "pdfbox, " + namespace + "aleph, " + namespace + "mets";
 	    return JsonMessage(new Message(result));
 	});
+    }
+
+    private static int getPort() {
+	try {
+	    return play.Play.application().configuration().getInt("http.port");
+	} catch (Exception e) {
+	    return 9000;
+	}
     }
 }
