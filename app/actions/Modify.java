@@ -631,11 +631,22 @@ public class Modify extends RegalAction {
      * @return a key value structure as feedback to the client
      */
     public Map<String, Object> addDoi(Node node) {
+	String contentType = node.getContentType();
+	if ("file".equals(contentType) || "issue".equals(contentType)
+		|| "volume".equals(contentType)) {
+	    throw new HttpArchiveException(
+		    412,
+		    node.getPid()
+			    + " resource is of type "
+			    + contentType
+			    + ". It is not allowed to mint Dois for this type. Leave unmodified!");
+	}
 	Map<String, Object> result = new HashMap<String, Object>();
 	String doi = node.getDoi();
 	result.put("Doi", doi);
 	if (doi == null || doi.isEmpty()) {
-	    node.setDoi(createDoiIdentifier(node));
+	    doi = createDoiIdentifier(node);
+	    node.setDoi(doi);
 	    RegalObject o = new RegalObject();
 	    o.getIsDescribedBy().setDoi(node.getDoi());
 	    new Create().patchResource(node, o);
