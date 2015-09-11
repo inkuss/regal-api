@@ -1,0 +1,98 @@
+@(data:Map[String,Object],dcData:DublinCoreData)<?xml version="1.0" encoding="UTF-8"?>
+<mets:mets xmlns:mets="http://www.loc.gov/METS/"
+ xmlns:dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+ xmlns:rts="http://cosimo.stanford.edu/sdr/metsrights/"
+ xmlns:mix="http://www.loc.gov/mix/v10"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation=
+"http://www.loc.gov/METS/
+ http://www.loc.gov/standards/mets/mets.xsd
+ http://cosimo.stanford.edu/sdr/metsrights/
+ http://cosimo.stanford.edu/sdr/metsrights.xsd
+ http://www.loc.gov/mix/v10
+ http://www.loc.gov/standards/mix/mix10/mix10.xsd
+ http://www.openarchives.org/OAI/2.0/oai_dc/ 
+ http://www.openarchives.org/OAI/2.0/oai_dc.xsd"
+ OBJID="@data.get("@id")"
+ LABEL="@data.get("title")">
+
+
+@addFile(objects:Any)={
+@objects match {
+		case objects: List[Map[String,Object]]=> {
+				@for( i <- objects){
+					@for( j <- i.keySet()){
+						@addFile(i.get(j))
+					}
+				}
+		}
+		case map: Map[String,Object]=> {
+		@map.get("hasPart") match {
+				case isGrp: List[Map[String,Object]] => { 
+				<mets:fileGrp ID="@map.get("@id")" USE="@map.get("contentType")">
+					@addFile(isGrp)
+				</mets:fileGrp>
+				}
+				case _ => {
+				<mets:file ID="@map.get("@id")" MIMETYPE="@map.get("hasData").asInstanceOf[Map[String,Object]].get("format")">
+				<metsFLocat xlink:href="@models.Globals.urnbase@map.get("@id")" LOCTYPE="URL"/>
+				</mets:file>
+				}
+		}
+		}
+		case _ => {}
+	}
+}
+
+@addFileToStructMap(objects:Any)={
+@objects match {
+		case objects: List[Map[String,Object]]=> {
+				@for( i <- objects){
+					@for( j <- i.keySet()){
+						@addFileToStructMap(i.get(j))
+					}
+				}
+		}
+		case map: Map[String,Object]=> {
+		@map.get("hasPart") match {
+				case isGrp: List[Map[String,Object]] => { 
+				
+					@addFileToStructMap(isGrp)
+			
+				}
+				case _ => {
+				<mets:fptr FILEID="@map.get("@id")"/>
+				}
+		}
+		}
+		case _ => {}
+	}
+}
+ 
+ 
+<mets:metsHdr>
+ 
+</mets:metsHdr>
+<mets:dmdSec ID="DMR1">
+	<mets:mdRef xlink:href="@data.get("@id")" LOCTYPE="URL" MDTYPE="RDF" LABEL="Publisso Entity"/>
+</mets:dmdSec>
+<mets:dmdSec ID="DM1">
+	<mets:mdWrap MDTYPE="DC" LABEL="@data.get("title")">
+		<mets:xmlData>
+		@tags.oaidcView(dcData)
+		</mets:xmlData>
+	</mets:mdWrap>
+</mets:dmdSec>
+<mets:amdSec>
+
+</mets:amdSec>
+
+<mets:fileSec>
+@addFile(data)
+</mets:fileSec>
+<mets:structMap TYPE="text" LABEL="" DDMDID="DMR1 DM1">
+@addFileToStructMap(data)
+</mets:structMap>
+
+</mets:mets>

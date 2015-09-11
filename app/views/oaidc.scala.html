@@ -1,21 +1,3 @@
 @(data:DublinCoreData)<?xml version="1.0" encoding="UTF-8" ?>
-	<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
-		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		xmlns:hbz="http://hbz-nrw.de/regal/schema"
-		xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dc="http://purl.org/dc/elements/1.1/"
-		xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
-@field(list: Seq[String],fieldname: String)() = {
-@for(i <- list){<@fieldname>@i</@fieldname>}
-}
-@import models.Pair
-@typedField(list: Seq[Pair[String,String]],fieldname: String)() = {
-@for(i <- list){<@fieldname xsi:type="@i.getRight()">@i.getLeft()</@fieldname>}
-}
-@typedField(data.getIdentifier(),"dc:identifier")
-@field(data.getTitle(),"dc:title")
-@field(data.getDate(),"dc:date")
-@field(data.getCreator(),"dc:creator")
-@field(data.getContributor(),"dc:contributor")
-@field(data.getType(),"dc:type")
-@field(data.getSubject(),"dc:subject")
-</oai_dc:dc>
+
+@tags.oaidcView(data)

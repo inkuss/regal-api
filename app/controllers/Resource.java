@@ -54,6 +54,7 @@ import play.mvc.Http.MultipartFormData;
 import play.mvc.Http.MultipartFormData.FilePart;
 import play.mvc.Result;
 import views.html.mab;
+import views.html.mets;
 import views.html.oaidc;
 import views.html.resource;
 import views.html.search;
@@ -701,6 +702,15 @@ public class Resource extends MyController {
 	    String result = transform.datacite(node);
 	    response().setContentType("application/xml");
 	    return ok(result);
+	});
+    }
+
+    @ApiOperation(produces = "application/xml", nickname = "asMets", value = "asMets", notes = "Returns a Mets display of the resource", response = Message.class, httpMethod = "GET")
+    public static Promise<Result> asMets(@PathParam("pid") String pid) {
+	return new ReadMetadataAction().call(pid, node -> {
+	    response().setContentType("application/xml");
+	    return ok(mets.render(read.getPartsAsTree(node, "long"),
+		    transform.oaidc(pid)));
 	});
     }
 
