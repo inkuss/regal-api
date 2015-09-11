@@ -36,7 +36,7 @@
 				}
 				case _ => {
 				<mets:file ID="@map.get("@id")" MIMETYPE="@map.get("hasData").asInstanceOf[Map[String,Object]].get("format")">
-				<metsFLocat xlink:href="@models.Globals.urnbase@map.get("@id")" LOCTYPE="URL"/>
+				<metsFLocat xlink:href="@models.Globals.urnbase@map.get("@id")/data" LOCTYPE="URL"/>
 				</mets:file>
 				}
 		}
