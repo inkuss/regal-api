@@ -208,12 +208,12 @@ public class Create extends RegalAction {
 	}
 	if (node.hasUrn()) {
 	    node.addTransformer(new Transformer("epicur"));
-	    if ("monograph".equals(type) || "journal".equals(type)
-		    || "webpage".equals(type))
-		if (node.hasLinkToCatalogId()) {
-		    node.addTransformer(new Transformer("aleph"));
-		}
 	}
+	if ("monograph".equals(type) || "journal".equals(type)
+		|| "webpage".equals(type))
+	    if (node.hasLinkToCatalogId()) {
+		node.addTransformer(new Transformer("aleph"));
+	    }
 	if (transformers != null) {
 	    for (String t : transformers) {
 		if ("oaidc".equals(t))
