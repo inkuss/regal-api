@@ -610,7 +610,7 @@ public class Read extends RegalAction {
     Map<String, String> getLinks(Node node) {
 	String oai = Globals.oaiMabXmlAddress + node.getPid();
 	String aleph = Globals.alephAddress + node.getLegacyId();
-	String lobid = Globals.lobidAddress + node.getLegacyId();
+	String lobid = node.getRelatives("http://hbz-nrw.de/regal#parallelEdition").get(0).getObject();
 	String api = this.getHttpUriOfResource(node);
 	String urn = null;
 	if(node.getUrn()!=null){
