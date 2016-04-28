@@ -193,7 +193,16 @@ public class Modify extends RegalAction {
 	    String enrichMessage = enrichMetadata(node);
 	    return pid + " metadata successfully updated, lobidified and enriched! " + enrichMessage;
 	} else {
-	    updateMetadata(node, content);
+	    play.Logger.info("Enrich " + node.getPid());
+	
+	    if (content == null || content.isEmpty()) {
+		play.Logger.info("Not metadata to enrich " + node.getPid());
+		return "Not metadata to enrich " + node.getPid();
+	    }
+	    List<Statement> enrichStatements = addDataFromGnd(node, content);
+	    content = RdfUtils.replaceTriples(enrichStatements, content);
+	    updateMetadata(node, content);	    
+	    
 	    return pid + " metadata successfully updated!";
 	}
     }
@@ -493,12 +502,7 @@ public class Modify extends RegalAction {
 		play.Logger.info("Not metadata to enrich " + node.getPid());
 		return "Not metadata to enrich " + node.getPid();
 	    }
-	    play.Logger.info("Enrich " + node.getPid() + " with gnd.");
-	    List<String> gndIds = findAllGndIds(metadata);
-	    List<Statement> enrichStatements = new ArrayList<Statement>();
-	    for (String uri : gndIds) {
-		enrichStatements.addAll(getStatements(uri));
-	    }
+	    List<Statement> enrichStatements = addDataFromGnd(node, metadata);
 
 	    play.Logger.info("Enrich " + node.getPid() + " with institution.");
 	    List<Statement> institutions = findInstitution(node);
@@ -515,6 +519,16 @@ public class Modify extends RegalAction {
 	    return "Enrichment of " + node.getPid() + " partially failed !\n" + e.getMessage();
 	}
 	return "Enrichment of " + node.getPid() + " succeeded!";
+    }
+
+    private List<Statement> addDataFromGnd(Node node, String metadata) {
+	play.Logger.info("Enrich " + node.getPid() + " with gnd.");
+	List<String> gndIds = findAllGndIds(metadata);
+	List<Statement> enrichStatements = new ArrayList<Statement>();
+	for (String uri : gndIds) {
+	enrichStatements.addAll(getStatements(uri));
+	}
+	return enrichStatements;
     }
 
     private List<Statement> findParents(Node node, String metadata) {
