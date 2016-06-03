@@ -102,13 +102,19 @@ public class Heritrix {
 
     }
 
-    private File createJobDir(Gatherconf conf) {
+    public File createJobDir(Gatherconf conf) {
+    // nicht nur bei Neuanlage, sondern auch, falls crawlerConf im JobDir erneuert werden muss (refresh)
 	try {
-	    // Create Job Directory
-	    WebgatherLogger.debug("Create job Directory " + jobDir + "/"
-		    + conf.getName());
-	    File dir = new File(jobDir + "/" + conf.getName());
-	    dir.mkdirs();
+		if( conf.getName() == null ) {
+			throw new RuntimeException("Name der Konfiguration ist NULL!");
+		}
+		File dir = new File(jobDir + "/" + conf.getName());
+		if( ! dir.exists()) {
+			// Create Job Directory
+		    WebgatherLogger.debug("Create job Directory " + jobDir + "/"
+			    + conf.getName());
+		    dir.mkdirs();	
+		}
 	    // Copy Job-Config to JobDirectory
 	    File crawlerConf = Play.application().getFile(
 		    "conf/crawler-beans.cxml");
@@ -131,8 +137,8 @@ public class Heritrix {
 		    "Edoweb crawl of" + conf.getUrl());
 	    content = content.replaceAll("\\$\\{URL\\}", conf.getUrl());
 
-	    // WebgatherLogger.debug("Print-----\n" + content + "\n to \n"
-		//    + dir.getAbsolutePath() + "/crawler-beans.cxml");
+	    WebgatherLogger.debug("Print-----\n" + content + "\n to \n"
+		   + dir.getAbsolutePath() + "/crawler-beans.cxml");
 
 	    Files.write(
 		    Paths.get(dir.getAbsolutePath() + "/crawler-beans.cxml"),
@@ -209,7 +215,7 @@ public class Heritrix {
 	File[] files = dir.listFiles(file -> {
 	    String now = new SimpleDateFormat("yyyyMMdd")
 		    .format(new java.util.Date());
-	    WebgatherLogger.debug("Directory must start with " + now);
+	    // WebgatherLogger.debug("Directory must start with " + now);
 	    return file.isDirectory() && file.getName().startsWith(now);
 	});
 	WebgatherLogger.debug(java.util.Arrays.toString(files));

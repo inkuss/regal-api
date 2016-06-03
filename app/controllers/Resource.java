@@ -823,7 +823,12 @@ public class Resource extends MyController {
 		Object o = request().body().asJson();
 		Gatherconf conf = null;
 		if (o != null) {
+			play.Logger.debug("o.toString="+o.toString());
 		    conf = (Gatherconf) MyController.mapper.readValue(o.toString(), Gatherconf.class);
+			// hier die neue conf auch im JobDir von Heritrix ablegen
+		    conf.setName(pid);
+		    play.Logger.debug("conf.toString="+conf.toString());
+			Globals.heritrix.createJobDir(conf);
 		}
 		String result = modify.updateConf(node, conf.toString());
 		return JsonMessage(new Message(result, 200));
