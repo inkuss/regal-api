@@ -106,7 +106,7 @@ public class Heritrix {
     // nicht nur bei Neuanlage, sondern auch, falls crawlerConf im JobDir erneuert werden muss (refresh)
 	try {
 		if( conf.getName() == null ) {
-			throw new RuntimeException("Name der Konfiguration ist NULL!");
+			throw new RuntimeException("The configuration has no name !");
 		}
 		File dir = new File(jobDir + "/" + conf.getName());
 		if( ! dir.exists()) {
@@ -212,13 +212,15 @@ public class Heritrix {
      */
     public File getCurrentCrawlDir(String name) {
 	File dir = new File(this.jobDir + "/" + name);
+	WebgatherLogger.debug("jobDir/name="+dir.toString());
 	File[] files = dir.listFiles(file -> {
 	    String now = new SimpleDateFormat("yyyyMMdd")
 		    .format(new java.util.Date());
 	    // WebgatherLogger.debug("Directory must start with " + now);
+	    // WebgatherLogger.debug("Found File: "+file.getName());
 	    return file.isDirectory() && file.getName().startsWith(now);
 	});
-	WebgatherLogger.debug(java.util.Arrays.toString(files));
+	WebgatherLogger.debug("Found crawl directories: "+java.util.Arrays.toString(files));
 	if (files == null || files.length <= 0) {
 	    throw new RuntimeException("No directory with timestamp created!");
 	}
