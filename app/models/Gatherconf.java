@@ -45,6 +45,7 @@ public class Gatherconf {
     }
 
     String name;
+    boolean active;
     String url;
     int deepness;
     RobotsPolicy robotsPolicy;
@@ -59,6 +60,7 @@ public class Gatherconf {
      */
     public Gatherconf() {
 	url = null;
+	active = true;
 	deepness = -1;
 	robotsPolicy = null;
 	interval = null;
@@ -68,6 +70,14 @@ public class Gatherconf {
 	id = null;
     }
 
+    public boolean isActive() {
+    	return active;
+    }
+    
+    public void setActive(boolean active) {
+    	this.active = active;
+    }
+    
     /**
      * @return the url of the website
      */

@@ -59,13 +59,17 @@ public class Webgatherer implements Runnable {
 	    WebgatherLogger.info("PID: " + n.getPid());
 	    WebgatherLogger.info("Config: " + n.getConf() + " is being created in Gatherconf.");
 		Gatherconf conf = Gatherconf.create(n.getConf());
+		if(! conf.isActive()) {
+			WebgatherLogger.info("Site "+n.getPid()+ " ist deaktiviert.");
+			continue;
+		}
 		WebgatherLogger.info("Test if " + n.getPid() + " is scheduled.");
 		// find open jobs
 		if (isOutstanding(n, conf)) {
-		    count++;
 		    WebgatherLogger.info("Create new version for: " + n.getPid()
 			    + ".");
 		    new Create().createWebpageVersion(n);
+		    count++; // count erst hier, so dass fehlgeschlagene Launches nicht mitgezählt werden
 		}
 
 	    } catch (WebgathererTooBusyException e) {
