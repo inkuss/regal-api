@@ -38,17 +38,14 @@ import actions.Read;
  */
 public class Webgatherer implements Runnable {
 
-	private static final Logger.ALogger WebgatherLogger =
-			Logger.of("webgatherer");
+	private static final Logger.ALogger WebgatherLogger = Logger.of("webgatherer");
 
 	@Override
 	public void run() {
 		// get all webpages
 
-		WebgatherLogger.info("List 50000 resources of type webpage from namespace "
-				+ Globals.namespaces[0] + ".");
-		List<Node> webpages =
-				new Read().listRepo("webpage", Globals.namespaces[0], 0, 50000);
+		WebgatherLogger.info("List 50000 resources of type webpage from namespace " + Globals.namespaces[0] + ".");
+		List<Node> webpages = new Read().listRepo("webpage", Globals.namespaces[0], 0, 50000);
 		WebgatherLogger.info("Found " + webpages.size() + " webpages.");
 		int count = 0;
 		int precount = 0;
@@ -59,8 +56,7 @@ public class Webgatherer implements Runnable {
 				precount++;
 				WebgatherLogger.info("Precount: " + precount);
 				WebgatherLogger.info("PID: " + n.getPid());
-				WebgatherLogger.info(
-						"Config: " + n.getConf() + " is being created in Gatherconf.");
+				WebgatherLogger.info("Config: " + n.getConf() + " is being created in Gatherconf.");
 				Gatherconf conf = Gatherconf.create(n.getConf());
 				if (!conf.isActive()) {
 					WebgatherLogger.info("Site " + n.getPid() + " ist deaktiviert.");
@@ -71,8 +67,8 @@ public class Webgatherer implements Runnable {
 				if (isOutstanding(n, conf)) {
 					WebgatherLogger.info("Create new version for: " + n.getPid() + ".");
 					new Create().createWebpageVersion(n);
-					count++; // count erst hier, so dass fehlgeschlagene Launches nicht
-										// mitgezählt werden
+					count++; // count erst hier, so dass fehlgeschlagene
+								// Launches nicht mitgezählt werden
 				}
 
 			} catch (WebgathererTooBusyException e) {
@@ -86,10 +82,13 @@ public class Webgatherer implements Runnable {
 	}
 
 	/**
-	 * @param n a webpage
-	 * @param conf user definde config
+	 * @param n
+	 *            a webpage
+	 * @param conf
+	 *            user definde config
 	 * @return nextLaunch
-	 * @throws Exception can be IOException or Json related Exceptions
+	 * @throws Exception
+	 *             can be IOException or Json related Exceptions
 	 */
 	public static Date nextLaunch(Node n) throws Exception {
 		Date lastHarvest = new Read().getLastModifiedChild(n).getLastModified();
@@ -112,14 +111,12 @@ public class Webgatherer implements Runnable {
 		Date now = cal.getTime();
 		cal.setTime(lastHarvest);
 		if (conf.getInterval().equals(models.Gatherconf.Interval.once)) {
-			WebgatherLogger.info(n.getPid()
-					+ " will be gathered only once. It has already been gathered on "
+			WebgatherLogger.info(n.getPid() + " will be gathered only once. It has already been gathered on "
 					+ new SimpleDateFormat("yyyy-MM-dd-hh:mm:ss").format(lastHarvest));
 			return false;
 		}
 		Date nextTimeHarvest = getSchedule(cal, conf);
-		WebgatherLogger.info(n.getPid() + " " + n.getConf()
-				+ " will be launched next time at "
+		WebgatherLogger.info(n.getPid() + " " + n.getConf() + " will be launched next time at "
 				+ new SimpleDateFormat("yyyy-MM-dd-hh:mm:ss").format(nextTimeHarvest));
 		return now.after(nextTimeHarvest);
 	}

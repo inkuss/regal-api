@@ -18,7 +18,6 @@ import play.Play;
 
 class HeritrixWebclient {
 	public static Client createWebclient() {
-		play.Logger.debug("Hello Heritrix");
 		String keystoreLoc = Play.application().configuration()
 				.getString("regal-api.keystoreLocation");
 		String keystorePass = Play.application().configuration()

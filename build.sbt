@@ -64,7 +64,8 @@ libraryDependencies ++= Seq(
   "com.fasterxml.jackson.core" %"jackson-core" %"2.6.3",
   "com.fasterxml" %"jackson-module-json-org" %"0.9.1",
   "com.fasterxml.jackson.core" %"jackson-databind" %"2.6.3",
-  "com.fasterxml.jackson.dataformat" %"jackson-dataformat-xml" %"2.6.3"
+  "com.fasterxml.jackson.dataformat" %"jackson-dataformat-xml" %"2.6.3",
+  "javax.mail" % "mail" % "1.4.2"
 )
 
 val root = (project in file(".")).enablePlugins(PlayJava)

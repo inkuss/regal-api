@@ -18,19 +18,23 @@ package actions;
 
 import static archive.fedora.Vocabulary.TYPE_OBJECT;
 import helper.HttpArchiveException;
+import helper.Mail;
 import helper.oai.OaiDispatcher;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import javax.mail.*;
 
 import models.Gatherconf;
 import models.Globals;
 import models.Node;
 import models.RegalObject;
 import models.RegalObject.Provenience;
+
 import play.Logger;
+import play.Play;
 
 /**
  * @author Jan Schnasse
@@ -50,6 +54,9 @@ public class Create extends RegalAction {
 		}
 
 	}
+
+	// @Inject
+	// MailerClient mailerClient;
 
 	/**
 	 * @param node
@@ -231,6 +238,7 @@ public class Create extends RegalAction {
 	 * @return a new version pointing to a heritrix crawl
 	 */
 	public Node createWebpageVersion(Node n) {
+		Gatherconf conf = null;
 		try {
 			if (Globals.heritrix.isBusy()) {
 				throw new WebgathererTooBusyException(403,
@@ -241,7 +249,7 @@ public class Create extends RegalAction {
 						+ " is not supported. Operation works only on regalType:\"webpage\"");
 			}
 			WebgatherLogger.debug("Create webpageVersion " + n.getPid());
-			Gatherconf conf = Gatherconf.create(n.getConf());
+			conf = Gatherconf.create(n.getConf());
 			WebgatherLogger.debug("Create webpageVersi " + conf.toString());
 			// execute heritrix job
 			conf.setName(n.getPid());
@@ -295,7 +303,32 @@ public class Create extends RegalAction {
 
 			return webpageVersion;
 		} catch (Exception e) {
+			WebgatherLogger.error("Website {} kann nicht gecrawlt werden !",
+					n.getPid());
+			// E-Mail erzeugen, dass Website nicht gecrawlt werden kann
+			Mail mail = new Mail();
+			mail.setTo(Play.application().configuration().getString("javax.mail.to"));
+			mail.setFrom(
+					Play.application().configuration().getString("javax.mail.from"));
+			String mailMsg =
+					"Das Crawlen der Website " + n.getPid() + " ist fehlgeschlagen !";
+			if (conf != null) {
+				mailMsg += "\nURL: " + conf.getUrl();
+			}
+			mail.setMessage(mailMsg);
+			mail.setSubject("ERROR crawling Webpage " + n.getPid());
+
+			String to = mail.getTo();
+			int result;
+			result = mail.sendMail();
+			if (result == 0) {
+				WebgatherLogger.info(" E-Mail erfolgreich verschickt an " + to);
+			} else {
+				WebgatherLogger
+						.error("E-Mail an " + to + " konnte nicht zugestellt werden !");
+			}
 			throw new RuntimeException(e);
 		}
 	}
-}
+
+} /* END of Class Create */

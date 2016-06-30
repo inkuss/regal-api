@@ -40,15 +40,12 @@ public class Heritrix {
 	public static String openwaybackLink = Play.application().configuration()
 			.getString("regal-api.heritrix.openwaybackLink");
 
-	final String restUrl =
-			Play.application().configuration().getString("regal-api.heritrix.rest");
+	final String restUrl = Play.application().configuration().getString("regal-api.heritrix.rest");
 
-	final String jobDir =
-			Play.application().configuration().getString("regal-api.heritrix.jobDir");
+	final String jobDir = Play.application().configuration().getString("regal-api.heritrix.jobDir");
 
 	final static Client client = HeritrixWebclient.createWebclient();
-	private static final Logger.ALogger WebgatherLogger =
-			Logger.of("webgatherer");
+	private static final Logger.ALogger WebgatherLogger = Logger.of("webgatherer");
 
 	/**
 	 * @param name
@@ -66,8 +63,7 @@ public class Heritrix {
 	private String teardownJobToHeritrix(String name) {
 		try {
 			WebResource resource = client.resource(restUrl + "/engine/job/" + name);
-			String response = resource.accept("application/xml").post(String.class,
-					"action=teardown");
+			String response = resource.accept("application/xml").post(String.class, "action=teardown");
 			WebgatherLogger.info(response);
 			return response;
 		} catch (Exception e) {
@@ -112,36 +108,31 @@ public class Heritrix {
 			File dir = new File(jobDir + "/" + conf.getName());
 			if (!dir.exists()) {
 				// Create Job Directory
-				WebgatherLogger
-						.debug("Create job Directory " + jobDir + "/" + conf.getName());
+				WebgatherLogger.debug("Create job Directory " + jobDir + "/" + conf.getName());
 				dir.mkdirs();
 			}
 			// Copy Job-Config to JobDirectory
 			File crawlerConf = Play.application().getFile("conf/crawler-beans.cxml");
 
 			/*
-			 * metadata.operatorContactUrl=${OPERATOR_URL} metadata.jobName=${JOBNAME}
-			 * metadata.description=${DESCRIPTION}
+			 * metadata.operatorContactUrl=${OPERATOR_URL}
+			 * metadata.jobName=${JOBNAME} metadata.description=${DESCRIPTION}
 			 * metadata.robotsPolicyName=${ROBOTSPOLICY} ${URL}
 			 */
 
 			Path path = Paths.get(crawlerConf.getAbsolutePath());
 			Charset charset = StandardCharsets.UTF_8;
 			String content = new String(Files.readAllBytes(path), charset);
-			content = content.replaceAll("\\$\\{OPERATOR_URL\\}",
-					"https://www.edoweb-rlp.de");
+			content = content.replaceAll("\\$\\{OPERATOR_URL\\}", "https://www.edoweb-rlp.de");
 			content = content.replaceAll("\\$\\{JOBNAME\\}", conf.getName());
-			content = content.replaceAll("\\$\\{ROBOTSPOLICY\\}",
-					conf.getRobotsPolicy().toString());
-			content = content.replaceAll("\\$\\{DESCRIPTION\\}",
-					"Edoweb crawl of" + conf.getUrl());
+			content = content.replaceAll("\\$\\{ROBOTSPOLICY\\}", conf.getRobotsPolicy().toString());
+			content = content.replaceAll("\\$\\{DESCRIPTION\\}", "Edoweb crawl of" + conf.getUrl());
 			content = content.replaceAll("\\$\\{URL\\}", conf.getUrl());
 
-			WebgatherLogger.debug("Print-----\n" + content + "\n to \n"
-					+ dir.getAbsolutePath() + "/crawler-beans.cxml");
+			WebgatherLogger
+					.debug("Print-----\n" + content + "\n to \n" + dir.getAbsolutePath() + "/crawler-beans.cxml");
 
-			Files.write(Paths.get(dir.getAbsolutePath() + "/crawler-beans.cxml"),
-					content.getBytes(charset));
+			Files.write(Paths.get(dir.getAbsolutePath() + "/crawler-beans.cxml"), content.getBytes(charset));
 			return dir;
 		} catch (Exception e) {
 
@@ -180,8 +171,7 @@ public class Heritrix {
 	private void launchJobToHeritrix(String name) {
 		try {
 			WebResource resource = client.resource(restUrl + "/engine/job/" + name);
-			WebgatherLogger.debug(resource.accept("application/xml")
-					.post(String.class, "action=launch"));
+			WebgatherLogger.debug(resource.accept("application/xml").post(String.class, "action=launch"));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -203,21 +193,20 @@ public class Heritrix {
 	}
 
 	/**
-	 * @param name the jobs name e.g. the pid
+	 * @param name
+	 *            the jobs name e.g. the pid
 	 * @return the servers directory where to store the data
 	 */
 	public File getCurrentCrawlDir(String name) {
 		File dir = new File(this.jobDir + "/" + name);
 		WebgatherLogger.debug("jobDir/name=" + dir.toString());
 		File[] files = dir.listFiles(file -> {
-			String now =
-					new SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
+			String now = new SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
 			// WebgatherLogger.debug("Directory must start with " + now);
 			// WebgatherLogger.debug("Found File: "+file.getName());
 			return file.isDirectory() && file.getName().startsWith(now);
 		});
-		WebgatherLogger
-				.debug("Found crawl directories: " + java.util.Arrays.toString(files));
+		WebgatherLogger.debug("Found crawl directories: " + java.util.Arrays.toString(files));
 		if (files == null || files.length <= 0) {
 			throw new RuntimeException("No directory with timestamp created!");
 		}
@@ -230,7 +219,8 @@ public class Heritrix {
 	}
 
 	/**
-	 * @param latest dir of the latest (most recent) job
+	 * @param latest
+	 *            dir of the latest (most recent) job
 	 * @return local path of the latest harvested warc
 	 */
 	public String findLatestWarc(File latest) {
@@ -250,8 +240,7 @@ public class Heritrix {
 	private String unpauseJobToHeritrix(String name) {
 		try {
 			WebResource resource = client.resource(restUrl + "/engine/job/" + name);
-			String response = resource.accept("application/xml").post(String.class,
-					"action=unpause");
+			String response = resource.accept("application/xml").post(String.class, "action=unpause");
 			WebgatherLogger.info(response);
 			return response;
 		} catch (Exception e) {
@@ -260,7 +249,8 @@ public class Heritrix {
 	}
 
 	/**
-	 * @param name of the job
+	 * @param name
+	 *            of the job
 	 * @return true if a jobdirectory is present
 	 */
 	public boolean jobExists(String name) {
@@ -289,8 +279,8 @@ public class Heritrix {
 	 */
 	public String getJobStatus(String name, String crawlDir) {
 		try {
-			WebResource resource = client.resource(restUrl + "/engine/job/" + name
-					+ "/jobdir/" + crawlDir + "/reports/crawl-report.txt");
+			WebResource resource = client
+					.resource(restUrl + "/engine/job/" + name + "/jobdir/" + crawlDir + "/reports/crawl-report.txt");
 			String response = resource.get(String.class);
 			return response;
 		} catch (Exception e) {
@@ -303,6 +293,7 @@ public class Heritrix {
 
 			WebgatherLogger.debug("restUrl=" + restUrl);
 			WebResource resource = client.resource(restUrl + "/engine/");
+			WebgatherLogger.debug("WebResource erfolgreich angelegt.");
 			resource.get(String.class);
 			return false;
 		} catch (Exception e) {
