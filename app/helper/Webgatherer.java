@@ -52,7 +52,8 @@ public class Webgatherer implements Runnable {
 		WebgatherLogger.info("Found " + webpages.size() + " webpages.");
 		int count = 0;
 		int precount = 0;
-		int limit = 5;
+		int limit = play.Play.application().configuration()
+				.getInt("regal-api.heritrix.crawlsPerNight");
 		// get all configs
 		for (Node n : webpages) {
 			try {
