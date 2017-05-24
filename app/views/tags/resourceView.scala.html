@@ -5,7 +5,7 @@
 <table class="table table-striped table-condensed" id="example" class="display" cellspacing="0" width="100%" resource=@hit.get("primaryTopic") data-entity-bundle=@hit.get("contentType")>
 <thead><tr><th style="display:none;">Weight</th><th>Name</th><th>Value</th></tr></thead>
 @hit.get("hasPart") match{
-	 case d: List[Any] => {
+	 case d: List[Any] => { 
 		<tr class="hasPart">
 			<td style="display:none;"></td>
 			<td class="field-label hasPart">@getLabel("hasPart")</td>
@@ -16,7 +16,7 @@
 					<li class="list-group-item col-xs-2">@tags.partsView(field)</li> 
 					}
 				</ul>
-		</tr>
+		</tr> 
 	} case _ =>{} 
 }
 @hit.get("hasData") match{ 
@@ -104,14 +104,18 @@ case fileMap :Map[String,Object] =>{
 													@value(a,key)
 								  		}
 										case b: Set[Any] => {
+										   <ul>
 											@for(field <- b){
-												@value(field,key)
+												<li>@value(field,key)</li>
 											}
+											</ul>
 										}
 										case d: List[Any] => {
+											<ol>
 											@for(field <- d){
-												@value(field,key)
+												<li>@value(field,key)</li>
 											}
+											</ol>
 										}
 										case c : Map[String,Object] => {
 											<table class="table table-striped table-condensed" resource=@c.get("@id")>
@@ -183,10 +187,11 @@ case fileMap :Map[String,Object] =>{
 			 <span class="@models.Globals.profile.getEtikett(a).getIcon()"></span>
 			 			   <a title="Ähnliche Objekte suchen" href="@models.Globals.rechercheUrlPrefix@helper.urlEncode(a)@models.Globals.rechercheUrlSuffix">
 	                       @(map.get(Globals.profile.getLabelKey()))
-	                       </a> |
+	                       </a> <span class="separator">|</span>
 	                       <a href=@analyseValue(a)>
 	                               <span class="glyphicon glyphicon-link"></span>
 	                       </a>
+	                       <br/>
 			}
 			case _ => {		
 				<table class="table table-striped table-condensed">

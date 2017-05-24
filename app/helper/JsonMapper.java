@@ -311,8 +311,8 @@ public class JsonMapper {
 			Collection<Map<String, Object>> t = getType(rdf);
 			if (t != null && t.size() != 0)
 				rdf.put(type, t);
-			postProcessInstitution(rdf);
 			sortCreatorAndContributors(rdf);
+			postProcess(rdf, "institution");
 			postProcess(rdf, "creator");
 			postProcess(rdf, "subject");
 			postProcess(rdf, "agrovoc");
@@ -336,6 +336,7 @@ public class JsonMapper {
 			postProcess(rdf, "publisher");
 			postProcess(rdf, "recordingLocation");
 			postProcess(rdf, "recordingCoords");
+			postProcess(rdf, "collectionOne");
 		} catch (Exception e) {
 			play.Logger.debug("", e);
 		}
@@ -355,19 +356,6 @@ public class JsonMapper {
 			}
 		} catch (Exception e) {
 			play.Logger.debug("", e);
-		}
-	}
-
-	private static void postProcessInstitution(Map<String, Object> rdf) {
-		try {
-			Collection<Object> institution =
-					(Collection<Object>) rdf.get("institution");
-			Map<String, Object> inst =
-					((Map<String, Object>) institution.iterator().next());
-			String label = findLabel(inst);
-			inst.put(PREF_LABEL, label);
-		} catch (Exception e) {
-			play.Logger.trace("", e);
 		}
 	}
 

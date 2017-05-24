@@ -91,7 +91,7 @@ public class Helper {
 						"<a title=\"Ähnliche Objekte suchen\" href=\"%s\"> %s</a>",
 						internLink, label));
 				result.append(String.format(
-						"|<a href=\"%s\"><span class=\"glyphicon glyphicon-link\"></span></a>, Band %s",
+						"<span class=\"separator\">|</span><a href=\"%s\"><span class=\"glyphicon glyphicon-link\"></span></a>, Band %s",
 						id, numbering));
 			}
 			return result.toString();

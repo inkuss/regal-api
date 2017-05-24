@@ -700,7 +700,11 @@ public class Modify extends RegalAction {
 			play.Logger.info("Enrich " + node.getPid() + " with recordingLocation.");
 			List<Statement> recordingLocation =
 					find(node, metadata, "http://hbz-nrw.de/regal#recordingLocation");
-			enrichStatements.addAll(language);
+			enrichStatements.addAll(recordingLocation);
+
+			List<Statement> collectionOne =
+					find(node, metadata, "info:regal/zettel/collectionOne");
+			enrichStatements.addAll(collectionOne);
 
 			metadata = RdfUtils.replaceTriples(enrichStatements, metadata);
 
