@@ -337,6 +337,7 @@ public class JsonMapper {
 			postProcess(rdf, "recordingLocation");
 			postProcess(rdf, "recordingCoords");
 			postProcess(rdf, "collectionOne");
+			postProcess(rdf, "containedIn");
 		} catch (Exception e) {
 			play.Logger.debug("", e);
 		}

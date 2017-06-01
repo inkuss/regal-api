@@ -194,6 +194,7 @@ public class MyEtikettMaker implements EtikettMakerInterface {
 
 	public static String getLabelFromEtikettWs(String uri) {
 		try {
+			uri = uri.replaceAll("#", "%23");
 			play.Logger.debug(Globals.etikettUrl + "?url=" + uri + "&column=label");
 			WSResponse response = play.libs.ws.WS
 					.url(Globals.etikettUrl + "?url=" + uri + "&column=label")
