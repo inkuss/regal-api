@@ -136,6 +136,16 @@ public class Heritrix {
 			content = content.replaceAll("\\$\\{DESCRIPTION\\}",
 					"Edoweb crawl of" + conf.getUrl());
 			content = content.replaceAll("\\$\\{URL\\}", conf.getUrl());
+			content = content.replaceAll("\\$\\{URL_NO_WWW\\}", "http://"
+					+ conf.getUrl().replaceAll("^http://", "").replaceAll("^www\\.", ""));
+			String urlRaw = conf.getUrl().replaceAll("^http://", "")
+					.replaceAll("^www\\.", "").replaceAll("/$", "");
+			String[] domains = urlRaw.split("\\.");
+			String surtDomainStr = "+http://(";
+			for (int i = domains.length - 1; i >= 0; i--) {
+				surtDomainStr += domains[i] + ",";
+			}
+			content = content.replaceAll("\\$\\{SURT_DOMAIN_STR\\}", surtDomainStr);
 
 			WebgatherLogger.debug("Print-----\n" + content + "\n to \n"
 					+ dir.getAbsolutePath() + "/crawler-beans.cxml");

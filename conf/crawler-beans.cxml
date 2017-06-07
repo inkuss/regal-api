@@ -3,6 +3,7 @@
   HERITRIX 3 CRAWL JOB CONFIGURATION FILE
   
    This is a relatively minimal configuration suitable for many crawls.
+   Modified by hbz June 2017
    
    Commented-out beans and properties are provided as an example; values
    shown in comments reflect the actual defaults which are in effect
@@ -106,28 +107,28 @@ ${URL}
   -->
  
  <bean id="acceptSurts" class="org.archive.modules.deciderules.surt.SurtPrefixedDecideRule">
-  <!-- <property name="decision" value="ACCEPT"/> -->
+ 	<property name="decision" value="ACCEPT"/>
   <!-- <property name="seedsAsSurtPrefixes" value="true" /> -->
   <!-- <property name="alsoCheckVia" value="false" /> -->
   <!-- <property name="surtsSourceFile" value="" /> -->
   <!-- <property name="surtsDumpFile" value="${launchId}/surts.dump" /> -->
-  <!-- <property name="surtsSource">
+  	<property name="surtsSource">
         <bean class="org.archive.spring.ConfigString">
          <property name="value">
           <value>
-           # example.com
-           # http://www.example.edu/path1/
-           # +http://(org,example,
+            ${URL}
+            ${URL_NO_WWW}
+            ${SURT_DOMAIN_STR}
           </value>
          </property> 
         </bean>
-       </property> -->
+ 	</property>
  </bean>
 
  <!-- SCOPE: rules for which discovered URIs to crawl; order is very 
       important because last decision returned other than 'NONE' wins. -->
  <bean id="scope" class="org.archive.modules.deciderules.DecideRuleSequence">
-  <!-- <property name="logToFile" value="false" /> -->
+  <property name="logToFile" value="false" />
   <property name="rules">
    <list>
     <!-- Begin by REJECTing all... -->
@@ -136,7 +137,7 @@ ${URL}
     <ref bean="acceptSurts" />
     <!-- ...but REJECT those more than a configured link-hop-count from start... -->
     <bean class="org.archive.modules.deciderules.TooManyHopsDecideRule">
-     <!-- <property name="maxHops" value="20" /> -->
+	  <property name="maxHops" value="20" />
     </bean>
     <!-- ...but ACCEPT those more than a configured link-hop-count from start... -->
     <bean class="org.archive.modules.deciderules.TransclusionDecideRule">
@@ -202,9 +203,9 @@ ${URL}
   <!-- <property name="canonicalizationPolicy"> 
         <ref bean="canonicalizationPolicy" />
        </property> -->
-  <!-- <property name="queueAssignmentPolicy"> 
+       <property name="queueAssignmentPolicy"> 
         <ref bean="queueAssignmentPolicy" />
-       </property> -->
+       </property>
   <!-- <property name="uriPrecedencePolicy"> 
         <ref bean="uriPrecedencePolicy" />
        </property> -->
@@ -467,9 +468,9 @@ ${URL}
  <property name='map'>
   <map>
    <entry key='disposition.delayFactor' value='10'/>
-   <entry key='disposition.minDelayMs' value='10000'/>
-   <entry key='disposition.maxDelayMs' value='1000000'/>
-   <entry key='disposition.respectCrawlDelayUpToSeconds' value='3600'/>
+   <entry key='disposition.minDelayMs' value='100'/>
+   <entry key='disposition.maxDelayMs' value='10000'/>
+   <entry key='disposition.respectCrawlDelayUpToSeconds' value='36'/>
   </map>
  </property>
 </bean>
@@ -573,6 +574,9 @@ ${URL}
   <property name="parallelQueues" value="1" />
  </bean>
  -->
+ <bean id="queueAssignmentPolicy"
+   class="org.archive.crawler.frontier.AssignmentLevelSurtQueueAssignmentPolicy">
+ </bean> 
  
  <!-- URI PRECEDENCE POLICY -->
  <!--
