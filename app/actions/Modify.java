@@ -254,10 +254,7 @@ public class Modify extends RegalAction {
 			return pid + " metadata successfully updated, lobidified and enriched! "
 					+ enrichMessage;
 		} else {
-			updateMetadata(node, content);
-			String enrichMessage = enrichMetadata(node);
-			return pid + " metadata successfully updated, and enriched! "
-					+ enrichMessage;
+			return pid + " no updates available. Resource has no AlephId.";
 		}
 
 	}
