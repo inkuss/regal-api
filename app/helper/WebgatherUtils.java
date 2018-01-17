@@ -177,7 +177,9 @@ public class WebgatherUtils {
 			mail.setTo(Play.application().configuration().getString("javax.mail.to"));
 			mail.setFrom(
 					Play.application().configuration().getString("javax.mail.from"));
-			String mailMsg = "Die Website " + conf.getName() + " ist ";
+			String siteName =
+					conf.getName() == null ? node.getAggregationUri() : conf.getName();
+			String mailMsg = "Die Website " + siteName + " ist ";
 			if (conf.getUrlNew() == null) {
 				mailMsg += "unbekannt verzogen.\n"
 						+ "Bitte geben Sie auf diesem Webformular eine neue, gültige URL ein. Solange wird die Website nicht erneut eingesammelt: ";
@@ -187,10 +189,14 @@ public class WebgatherUtils {
 			}
 			mailMsg += Globals.urnbase + node.getAggregationUri() + "/crawler .";
 			mail.setMessage(mailMsg);
-			mail.setSubject("Eine Website ist umgezogen ! " + conf.getName());
-			assertEquals(mail.sendMail(), 0);
+			mail.setSubject("Die Website " + siteName + " ist umgezogen ! ");
+			// assertEquals(mail.sendMail(), 0); # zu hart, so bricht der
+			// Webgatherer-Lauf ab
+			if (mail.sendMail() != 0) {
+				throw new RuntimeException("Email could not be sent successfully!");
+			}
 		} catch (Exception e) {
-			WebgatherLogger.warn("Email could not be sent successfully!", e);
+			WebgatherLogger.warn(e.toString());
 		}
 	}
 

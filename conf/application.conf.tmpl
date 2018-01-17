@@ -4,8 +4,8 @@ application.langs="en"
 #-------------Logger-------------
 logger.root=WARN
 logger.play=INFO
-logger.application=DEBUG
-logger.config.developer=conf/logback.developer.xml
+logger.application=INFO
+logger.config.developer=conf/logback.xml
 
 #-------------Backend-----------------
 regal-api.serverName="api.localhost"
@@ -13,26 +13,42 @@ regal-api.fedoraIntern="http://localhost:8080/fedora"
 regal-api.fedoraUser="admin"
 regal-api.fedoraUserPassword="admin"
 regal-api.escluster="localhost"
-regal-api.keystoreLocation=""
+regal-api.keystoreLocation="/opt/regal/conf/regal_keystore"
 regal-api.keystorePassword=""
-regal-api.namespace="frl"
-regal-api.alephSetName=edoweb01
+regal-api.namespace="edoweb"
+regal-api.alephSetName=edo01
 regal-api.etikett.url="http://api.localhost:9002/tools/etikett"
 regal-api.etikett.user="admin"
 regal-api.etikett.pwd="admin"
 regal-api.zettel.url="http://api.localhost/tools/zettel"
 regal-api.thumby.url="http://api.localhost/tools/thumby"
 regal-api.deepzoom.url="http://api.localhost/deepzoom/api/getDZI"
-
-
 regal-api.protocol="http://"
 # edoweb: Archivierte Online-Ressource , ellinet: Langzeitarchivierung
 regal-api.mab655x="Archivierte Online-Ressource"
 
 #---------------Auth-------------------
+#regal-api.userImpl="models.FakeUser"
+#regal-api.userImpl="models.LdapUser"
+#regal-api.ldapServer="ldap://yourldapserver:389"
+#regal-api.userImpl="models.HardCodedUser"
+#regal-api.admin-password=""
+#regal-api.editor-password=""
+#regal-api.reader-password=""
+#regal-api.subscriber-password=""
+#regal-api.remote-password=""
 # Produce hash with  echo -n i/eH15H1lD/NirbFbXTF8IZJhOtjo9IfM9fkkHg0mHY=admin | sha256sum
+regal-api.userImpl="models.EncryptedUser"
 regal-api.admin-salt="i/eH15H1lD/NirbFbXTF8IZJhOtjo9IfM9fkkHg0mHY="
 regal-api.admin-hash="1b276263590218d1ed0cd1da411e7570c3370c298745143710aa5c021f985f94"
+regal-api.editor-salt=""
+regal-api.editor-hash=""
+regal-api.reader-salt=""
+regal-api.reader-hash=""
+regal-api.subscriber-salt=""
+regal-api.subscriber-hash=""
+regal-api.remote-salt=""
+regal-api.remote-hash=""
 regal-api.ipWhiteList="127.0.0"
 
 #---------------Drupal specific---------------
@@ -48,8 +64,8 @@ regal-api.digitoolAddress="http://klio.hbz-nrw.de:1801/webclient/DeliveryManager
 #-------------DOI------------------------
 regal-api.dataciteUser="$DATACITE_USER"
 regal-api.datacitePassword="$DATACITE_PASSWORD"
-# Test Prefix 10.5072/orga:repo-  "10.5072/FRL01-"                                                                                                                                                                                      
-# Productive Prefix 10.4126/orga:repo-                                                                                                                                                                            
+# Test Prefix 10.5072/orga:repo-  "10.5072/FRL01-"
+# Productive Prefix 10.4126/orga:repo-
 regal-api.doiPrefix="10.5072"
 
 #-------------URN------------------------
@@ -59,10 +75,10 @@ regal-api.urnbase="https://localhost/resource/"
 
 #------------Cron/Tasks------------------
 #To run every day at 0.23h add "0 23 0 * *?"
-#To run every hour at 23min add "0 23 * * * ?"                                                                                                                                                                           
+#To run every hour at 23min add "0 23 * * * ?"
 #regal-api.doiTask="0 23 * * * ?"
-#Run every 5 secs                                                                                                                                                                                                    
-#regal-api.heartbeatTask="*/5 * * * * ?"                                                                                                                                                                             
+#Run every 5 secs
+#regal-api.heartbeatTask="*/5 * * * * ?"
 #regal-api.urnTask="0/5 * * * * ?"
 #regal-api.webgatherTask="* * */3 * * ?"
 
@@ -84,14 +100,29 @@ regal-api.heritrix.crawlsPerNight=10
 regal-api.wget.dataDir="/opt/regal/wget-data"
 # URL, unter der das Datenverzeichnis /wget-data liegt, also so: dataUrl/wget-data/
 regal-api.wget.dataUrl="https://localhost/wget-data"
+
 #-------------wpull (Crawler)-----------------------                            
 regal-api.wpull.crawler="/usr/local/bin/wpull3"
 regal-api.wpull.jobDir="/opt/regal/wpull-data"
-
 
 #------Swagger self documenting----------
 logger.swagger=ERROR
 logger.com.wordnik.swagger=ERROR
 api.version="0.7.0"
 swagger.api.basepath="https://api.localhost"
+swagger.filter="security.AuthorisationFilter"
 http.port=9000
+play.http.parser.maxDiskBuffer=200M
+
+#--------javax-Mail---------------------
+#javax.mail.smtpServ="mail.edoweb-rlp.de"
+#javax.mail.user="edoweb"
+#javax.mail.password="pubsys208"
+javax.mail.smtpServ="edoweb-test.hbz-nrw.de"
+javax.mail.user="edoweb"
+javax.mail.password="pubsys164"
+#javax.mail.to="edoweb-admin@hbz-nrw.de"
+javax.mail.to="kuss@hbz-nrw.de, schnasse@hbz-nrw.de, quast@hbz-nrw.de"
+# Addresat für E-Mails vom JUnitTest TestMail :
+javax.mail.totest="kuss@hbz-nrw.de"
+javax.mail.from="edoweb"
