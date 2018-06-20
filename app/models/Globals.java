@@ -335,4 +335,8 @@ public class Globals {
 			Play.application().configuration().getString("regal-api.zettel.url");
 	public static String deepzoomeUrl =
 			Play.application().configuration().getString("regal-api.deepzoom.url");
+	public static String webharvestsDataDir = Play.application().configuration()
+			.getString("regal-api.webharvests.dataDir");
+	public static String webharvestsDataUrl = Play.application().configuration()
+			.getString("regal-api.webharvests.dataUrl");
 }
