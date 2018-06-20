@@ -1067,6 +1067,16 @@ public class Resource extends MyController {
 		});
 	}
 
+	public static Promise<Result> linkVersion(@PathParam("pid") String pid,
+			@QueryParam("versionPid") String versionPid,
+			@QueryParam("label") String label) {
+		return new ModifyAction().call(pid, userId -> {
+			Node node = readNodeOrNull(pid);
+			Node result = create.linkWebpageVersion(node, versionPid, label);
+			return getJsonResult(result);
+		});
+	}
+
 	public static Promise<Result> getStatus(@PathParam("pid") String pid) {
 		return new ReadMetadataAction().call(pid, node -> {
 			return getJsonResult(read.getStatus(node));
