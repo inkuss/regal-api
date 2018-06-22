@@ -19,9 +19,11 @@ package actions;
 import static archive.fedora.Vocabulary.TYPE_OBJECT;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
 import helper.HttpArchiveException;
 import helper.mail.WebgatherExceptionMail;
 import helper.oai.OaiDispatcher;
@@ -43,6 +45,7 @@ public class Create extends RegalAction {
 			Logger.of("application");
 	private static final Logger.ALogger WebgatherLogger =
 			Logger.of("webgatherer");
+	private static final BigInteger bigInt1024 = new BigInteger("1024");
 
 	@SuppressWarnings({ "javadoc", "serial" })
 	public class WebgathererTooBusyException extends HttpArchiveException {
@@ -409,12 +412,12 @@ public class Create extends RegalAction {
 
 	/**
 	 * @param n must be of type web page
-	 * @param versionPid versionPid
-	 * @param label date string
+	 * @param jsn Json node
 	 * @return a new version pointing to a linked, unpacked crawl
 	 */
-	public Node linkWebpageVersion(Node n, String versionPid, String label) {
+	public Node linkWebpageVersion(Node n, JsonNode jsn) {
 		Gatherconf conf = null;
+		String versionPid = "";
 		try {
 			if (!"webpage".equals(n.getContentType())) {
 				throw new HttpArchiveException(400, n.getContentType()
@@ -424,10 +427,23 @@ public class Create extends RegalAction {
 			conf = Gatherconf.create(n.getConf());
 			ApplicationLogger.debug("Link webpageVersion Conf" + conf.toString());
 			conf.setName(n.getPid());
+			versionPid =
+					jsn.findValue("versionPid").toString().replaceAll("^\"|\"$", "");
+			ApplicationLogger.debug("versionPid: " + versionPid);
 			conf.setId(versionPid);
-			Date startDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-					.parse(label + " 12:00:00");
+			String dateTimestamp =
+					jsn.findValue("dateTimestamp").toString().replaceAll("^\"|\"$", "");
+			ApplicationLogger.debug("dateTimestamp: " + dateTimestamp);
+			Date startDate = new SimpleDateFormat("yyyyMMdd HH:mm:ss")
+					.parse(dateTimestamp + " 12:00:00");
 			conf.setStartDate(startDate);
+			String label = dateTimestamp.substring(0, 4) + "-"
+					+ dateTimestamp.substring(4, 6) + "-" + dateTimestamp.substring(6, 8);
+			ApplicationLogger.debug("label: " + label);
+			String zipSizeStr =
+					jsn.findValue("zipSize").toString().replaceAll("^\"|\"$", "");
+			BigInteger zipSize = new BigInteger(zipSizeStr).multiply(bigInt1024);
+			ApplicationLogger.debug("zipSize (bytes): " + zipSize.toString());
 			String relUri = n.getPid() + "/" + n.getNamespace() + ":" + versionPid;
 			File crawlDir = new File(Globals.webharvestsDataDir + "/" + relUri);
 			conf.setLocalDir(crawlDir.getAbsolutePath());
@@ -453,6 +469,7 @@ public class Create extends RegalAction {
 							+ "> <http://purl.org/dc/terms/title> \"" + label + "\" .");
 			webpageVersion.setLocalData(localpath);
 			webpageVersion.setMimeType("application/xml");
+			webpageVersion.setFileSize(zipSize);
 			webpageVersion.setFileLabel(label);
 			webpageVersion.setAccessScheme(n.getAccessScheme());
 			webpageVersion.setPublishScheme(n.getPublishScheme());

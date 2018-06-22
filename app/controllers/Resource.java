@@ -50,6 +50,7 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiImplicitParam;
 import com.wordnik.swagger.annotations.ApiImplicitParams;
@@ -1067,12 +1068,12 @@ public class Resource extends MyController {
 		});
 	}
 
-	public static Promise<Result> linkVersion(@PathParam("pid") String pid,
-			@QueryParam("versionPid") String versionPid,
-			@QueryParam("label") String label) {
+	@ApiOperation(produces = "application/json", nickname = "linkVersion", value = "linkVersion", response = Result.class, httpMethod = "POST")
+	public static Promise<Result> linkVersion(@PathParam("pid") String pid) {
 		return new ModifyAction().call(pid, userId -> {
 			Node node = readNodeOrNull(pid);
-			Node result = create.linkWebpageVersion(node, versionPid, label);
+			JsonNode jsn = new ObjectMapper().valueToTree(request().body().asJson());
+			Node result = create.linkWebpageVersion(node, jsn);
 			return getJsonResult(result);
 		});
 	}
