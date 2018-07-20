@@ -22,18 +22,19 @@ import play.Play;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
-import java.net.URISyntaxException;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.ibm.icu.util.Calendar;
 
 import models.Gatherconf;
@@ -47,6 +48,7 @@ import actions.Read;
 
 /**
  * @author Jan Schnasse
+ * @author Ingolf Kuss
  *
  */
 public class Webgatherer implements Runnable {
@@ -55,84 +57,118 @@ public class Webgatherer implements Runnable {
 			Play.application().configuration().getString("regal-api.heritrix.jobDir");
 	final static String wpullJobDir =
 			Play.application().configuration().getString("regal-api.wpull.jobDir");
-	private String msg = null;
+	private int count = 0;
+	private int precount = 0;
+	private static int limit = play.Play.application().configuration()
+			.getInt("regal-api.heritrix.crawlsPerNight");
 	private static final Logger.ALogger WebgatherLogger =
 			Logger.of("webgatherer");
 
 	@Override
 	public void run() {
-		// get all webpages
-
 		WebgatherLogger.info("List 50000 resources of type webpage from namespace "
 				+ Globals.defaultNamespace + ".");
 		play.Logger.info("List 50000 resources of type webpage from namespace "
 				+ Globals.defaultNamespace + ".");
-		List<Node> webpages =
-				new Read().listRepo("webpage", Globals.defaultNamespace, 0, 50000);
-		WebgatherLogger.info("Found " + webpages.size() + " webpages.");
-		int count = 0;
-		int precount = 0;
-		int limit = play.Play.application().configuration()
-				.getInt("regal-api.heritrix.crawlsPerNight");
-		Gatherconf conf = null;
-		Node node = null;
-		// get all configs
-		for (Node n : webpages) {
-			try {
-				precount++;
-				node = n;
-				conf = null;
-				WebgatherLogger.info("Precount: " + precount);
-				WebgatherLogger.info("PID: " + n.getPid());
-				if (n.getConf() == null) {
-					WebgatherLogger.info("Webpage " + n.getPid()
-							+ " hat noch keine Crawler-Konfigration.");
-					continue;
-				}
-				WebgatherLogger.info(
-						"Config: " + n.getConf() + " is being created in Gatherconf.");
-				conf = Gatherconf.create(n.getConf());
-				if (!conf.isActive()) {
-					WebgatherLogger.info("Site " + n.getPid() + " ist deaktiviert.");
-					continue;
-				}
-				WebgatherLogger.info("Test if " + n.getPid() + " is scheduled.");
-				// find open jobs
-				if (isOutstanding(n, conf)) {
-					WebgatherLogger.info("Die Website soll jetzt eingesammelt werden.");
-					if (conf.hasUrlMoved()) {
-						if (conf.getUrlNew() == null) {
-							WebgatherLogger.info("De Sick is unbekannt vertrocke !");
-						} else {
-							WebgatherLogger
-									.info("De Sick is umjetrocke noh " + conf.getUrlNew() + " .");
-						}
-						WebgatherUtils.prepareWebpageMoving(n, conf);
-					} else {
-						WebgatherLogger
-								.info("HTTP Response Code = " + conf.getHttpResponseCode());
-						WebgatherLogger.info("Create new version for: " + n.getPid() + ".");
-						new Create().createWebpageVersion(n);
-						count++; // count erst hier, so dass fehlgeschlagene Launches nicht
-											// mitgezählt werden
-					}
-				}
 
-			} catch (WebgathererTooBusyException e) {
-				WebgatherLogger.error("Webgatherer stopped! Heritrix is too busy.");
-			} catch (MalformedURLException | URISyntaxException e) {
-				setUnknownHost(node, conf);
-				WebgatherLogger.error("Fehlgeformte URL !");
-			} catch (UnknownHostException e) {
-				setUnknownHost(node, conf);
-				WebgatherLogger.error("Kein Host zur URL !");
-			} catch (Exception e) {
-				WebgatherLogger
-						.error("Couldn't create webpage version for " + n.getPid(), e);
+		List<Node> webpages = getAllWebpages();
+		count = 0;
+		precount = 0;
+		for (Node n : webpages) {
+			if (webpageIsReady(n)) {
+				applyWebgathererSequenceToNode(n);
 			}
 			if (count >= limit)
 				break;
 		}
+	}
+
+	private static boolean webpageIsReady(Node n) {
+		try {
+			WebgatherLogger.info("Test if " + n.getPid() + " is scheduled.");
+			if (n.getConf() == null) {
+				WebgatherLogger.info(
+						"Webpage " + n.getPid() + " hat noch keine Crawler-Konfigration.");
+				return false;
+			}
+			WebgatherLogger
+					.info("Config: " + n.getConf() + " is being created in Gatherconf.");
+			Gatherconf conf = Gatherconf.create(n.getConf());
+			if (!conf.isActive()) {
+				WebgatherLogger.info("Site " + n.getPid() + " ist deaktiviert.");
+				return false;
+			}
+			if (!isOutstanding(n, conf)) {
+				WebgatherLogger.info(
+						"Die Site " + n.getPid() + " ist noch nicht mit Gathern dran.");
+				return false;
+			}
+			WebgatherLogger.info("Test if " + n.getPid() + " is scheduled.");
+			WebgatherLogger.info("Die Website soll jetzt eingesammelt werden.");
+			return true;
+		} catch (Exception e) {
+			WebgatherLogger.error("Unbekannter Fehler beim Überprüfen der Webpage!",
+					e.getMessage());
+			return false;
+		}
+	}
+
+	private static List<Node> getAllWebpages() {
+		List<Node> webpages =
+				new Read().listRepo("webpage", Globals.defaultNamespace, 0, 50000);
+		WebgatherLogger.info("Found " + webpages.size() + " webpages.");
+		return webpages;
+	}
+
+	private void applyWebgathererSequenceToNode(Node n) {
+		Gatherconf conf = null;
+		Node node = null;
+		try {
+			conf = Gatherconf.create(n.getConf());
+			if (hasUrlMoved(n, conf)) {
+
+				moveWebpage(n, conf);
+				return;
+			}
+			// Hier das eigentliche Einsammeln starten (gather)
+			precount++;
+			node = n;
+			WebgatherLogger.info("Precount: " + precount);
+			WebgatherLogger.info("PID: " + n.getPid());
+			WebgatherLogger.info("Die Website soll jetzt eingesammelt werden.");
+			Node webpageVersion = new Create().createWebpageVersion(n);
+			if (webpageVersion.getMimeType().equals("application/warc")) {
+				count++;
+			}
+		} catch (WebgathererTooBusyException e) {
+			WebgatherLogger.error("Webgatherer stopped! Heritrix is too busy.");
+		} catch (MalformedURLException e) {
+			setUnknownHost(node, conf);
+			WebgatherLogger.error("Fehlgeformte URL !");
+		} catch (UnknownHostException e) {
+			setUnknownHost(node, conf);
+			WebgatherLogger.error("Kein Host zur URL !");
+		} catch (Exception e) {
+			WebgatherLogger.error("Couldn't create webpage version for " + n.getPid(),
+					e);
+		}
+	}
+
+	/**
+	 * Webpage zum Umziehen vorbereiten. Verschickt eine E-Mail, in der man dazu
+	 * aufgefordert wird, den Umzug manuell zu bestätigen.
+	 * 
+	 * @param n der Knoten der Webpage
+	 * @param conf die conf der Webpage (Konfigurationsdatei für das Einsammeln)
+	 */
+	public static void moveWebpage(Node n, Gatherconf conf) {
+		if (conf.getUrlNew() == null) {
+			WebgatherLogger.info("De Sick is unbekannt vertrocke !");
+		} else {
+			WebgatherLogger
+					.info("De Sick is umjetrocke noh " + conf.getUrlNew() + " .");
+		}
+		WebgatherUtils.prepareWebpageMoving(n, conf);
 	}
 
 	private static void setUnknownHost(Node node, Gatherconf conf) {
@@ -300,6 +336,55 @@ public class Webgatherer implements Runnable {
 																		// to verify that ?
 		WebgatherLogger.debug("Launch Count = " + launchCount);
 		return launchCount;
+	}
+
+	/**
+	 * Stellt fest, ob die URL umgezogen ist.
+	 * 
+	 * @return ob die URL der Webpage umgezogen ist
+	 * @exception MalformedURLException
+	 * @exception IOException
+	 */
+	public static boolean hasUrlMoved(Node n, Gatherconf conf) {
+		WebgatherLogger.debug("probing if URL has moved.");
+		if (conf.getInvalidUrl()) {
+			WebgatherLogger.debug("conf already has an invalid url. ==> HasMoved.");
+			return true;
+		}
+
+		try {
+			WebgatherLogger.debug("establishing connection to url " + conf.getUrl());
+			HttpURLConnection httpConnection = (HttpURLConnection) new URL(
+					WebgatherUtils.convertUnicodeURLToAscii(conf.getUrl()))
+							.openConnection();
+			httpConnection.setRequestMethod("GET");
+			int httpResponseCode = httpConnection.getResponseCode();
+			WebgatherLogger.debug("httpResponseCode=" + httpResponseCode);
+			if (httpResponseCode != 301) {
+				return false;
+			}
+			// ermittelt die neue URL (falls bekannt)
+			for (Entry<String, List<String>> header : httpConnection.getHeaderFields()
+					.entrySet()) {
+				if (header.getKey() != null && header.getKey().equals("Location")) {
+					conf.setUrlNew(header.getValue().get(0));
+				}
+			}
+			httpConnection.disconnect();
+			return true;
+		} catch (Exception e) {
+			/*
+			 * Hier wird jetzt eine mail an den Benutzer geschickt. Die URL konnte aus
+			 * unbekannten Gründen nicht bearbeitet werden. Vielleicht liegt ein
+			 * Syntaxfehler vor. In jedem Fall ist eine Benutzeraktion oder
+			 * Überprüfung notwendig.
+			 */
+			setUnknownHost(n, conf);
+			WebgatherLogger.error("Fehlgeformte URL !");
+			WebgatherLogger
+					.error("Url " + conf.getUrl() + " konnte nicht überprüft werden.");
+			throw new RuntimeException(e);
+		}
 	}
 
 }

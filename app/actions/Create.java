@@ -20,11 +20,13 @@ import static archive.fedora.Vocabulary.TYPE_OBJECT;
 
 import java.io.File;
 import java.math.BigInteger;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.databind.JsonNode;
 import helper.HttpArchiveException;
+import helper.WebgatherUtils;
 import helper.mail.WebgatherExceptionMail;
 import helper.oai.OaiDispatcher;
 import helper.WpullCrawl;
@@ -242,8 +244,10 @@ public class Create extends RegalAction {
 	/**
 	 * @param n must be of type webpage
 	 * @return a new version pointing to a heritrix crawl
+	 * @throws URISyntaxException eine URISyntaxException
 	 */
 	public Node createWebpageVersion(Node n) {
+
 		Gatherconf conf = null;
 		File crawlDir = null;
 		String localpath = null;
@@ -257,6 +261,7 @@ public class Create extends RegalAction {
 			WebgatherLogger
 					.debug("Create webpageVersion with conf " + conf.toString());
 			conf.setName(n.getPid());
+
 			if (conf.getCrawlerSelection()
 					.equals(Gatherconf.CrawlerSelection.heritrix)) {
 				if (Globals.heritrix.isBusy()) {

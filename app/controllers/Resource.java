@@ -63,6 +63,7 @@ import archive.fedora.RdfUtils;
 import authenticate.BasicAuth;
 import helper.HttpArchiveException;
 import helper.JsonMapper;
+import helper.Webgatherer;
 import helper.WebgatherUtils;
 import helper.oai.OaiDispatcher;
 import models.DublinCoreData;
@@ -1052,11 +1053,33 @@ public class Resource extends MyController {
 	}
 
 	public static Promise<Result> createVersion(@PathParam("pid") String pid) {
+		Node node = readNodeOrNull(pid);
+		if (hasUrlMoved(node)) {
+			return new ModifyAction().call(pid, userId -> {
+				return getJsonResult(node);
+			});
+		}
 		return new ModifyAction().call(pid, userId -> {
-			Node node = readNodeOrNull(pid);
 			Node result = create.createWebpageVersion(node);
 			return getJsonResult(result);
 		});
+	}
+
+	private static boolean hasUrlMoved(Node node) {
+		Gatherconf conf = null;
+		try {
+			conf = Gatherconf.create(node.getConf());
+		} catch (Exception e) {
+			play.Logger
+					.error("Error instantiating Gatherconf for pid " + node.getPid(), e);
+			return true;
+		}
+		if (Webgatherer.hasUrlMoved(node, conf)) {
+			Webgatherer.moveWebpage(node, conf);
+			play.Logger.info("The URL for pid " + node.getPid() + " has moved.");
+			return true;
+		}
+		return false;
 	}
 
 	public static Promise<Result> importVersion(@PathParam("pid") String pid,
