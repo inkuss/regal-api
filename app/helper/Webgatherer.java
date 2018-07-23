@@ -35,6 +35,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+
 import com.ibm.icu.util.Calendar;
 
 import models.Gatherconf;
@@ -357,6 +363,7 @@ public class Webgatherer implements Runnable {
 			HttpURLConnection httpConnection = (HttpURLConnection) new URL(
 					WebgatherUtils.convertUnicodeURLToAscii(conf.getUrl()))
 							.openConnection();
+			setFollowRedirects(httpConnection, false);
 			httpConnection.setRequestMethod("GET");
 			int httpResponseCode = httpConnection.getResponseCode();
 			WebgatherLogger.debug("httpResponseCode=" + httpResponseCode);
@@ -385,6 +392,38 @@ public class Webgatherer implements Runnable {
 					.error("Url " + conf.getUrl() + " konnte nicht überprüft werden.");
 			throw new RuntimeException(e);
 		}
+	}
+
+	private static void setFollowRedirects(HttpURLConnection httpConnection,
+			boolean follow) {
+		httpConnection.setFollowRedirects(follow);
+	}
+
+	/**
+	 * Here is how I get status code from HttpClient, which I like very much: From
+	 * user https://stackoverflow.com/users/2917711/lw0 at stackoverflow, 20.März
+	 * 2014
+	 **/
+	public static int getUrlHttpResponseStatusCode(String uri) {
+		CloseableHttpResponse response = null;
+		int statusCode = -1;
+		try {
+			CloseableHttpClient client = HttpClients.createDefault();
+			HttpHead headReq = new HttpHead(uri);
+			response = client.execute(headReq);
+			StatusLine sl = response.getStatusLine();
+			statusCode = sl.getStatusCode();
+		} catch (Exception e) {
+			WebgatherLogger.error("Error in HttpGroovySourse : " + e.getMessage(), e);
+		} finally {
+			try {
+				response.close();
+			} catch (Exception e) {
+				WebgatherLogger.error("Error in HttpGroovySourse : " + e.getMessage(),
+						e);
+			}
+		}
+		return statusCode;
 	}
 
 }
