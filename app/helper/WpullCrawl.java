@@ -203,7 +203,7 @@ public class WpullCrawl {
 		}
 
 		int level = conf.getDeepness();
-		if (level != 0) {
+		if (level > 0) {
 			sb.append(" --level=" + Integer.toString(level)); // number of recursions
 		}
 
