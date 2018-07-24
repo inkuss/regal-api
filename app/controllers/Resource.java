@@ -1058,8 +1058,9 @@ public class Resource extends MyController {
 				Node node = readNodeOrNull(pid);
 				Gatherconf conf = Gatherconf.create(node.getConf());
 				if (Webgatherer.hasUrlMoved(node, conf)) {
+					WebgatherUtils.prepareWebpageMoving(node, conf);
 					return JsonMessage(new Message(
-							"Webseite ist umgezogen! Die Webseite antwortet mit: HTTP 301 permanentyl moved.",
+							"Webseite ist umgezogen! Die Webseite antwortet mit: HTTP 301 permanently moved.",
 							400));
 				}
 				Node result = create.createWebpageVersion(node);

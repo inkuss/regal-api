@@ -90,6 +90,12 @@ public class WebgatherUtils {
 	 * @param conf die Gatherconf einer umzuziehenden Webpage
 	 */
 	public static void prepareWebpageMoving(Node node, Gatherconf conf) {
+		if (conf.getUrlNew() == null) {
+			WebgatherLogger.info("De Sick is unbekannt vertrocke !");
+		} else {
+			WebgatherLogger
+					.info("De Sick is umjetrocke noh " + conf.getUrlNew() + " .");
+		}
 		if (conf.getInvalidUrl() == true) {
 			return;
 		} // nichts zu tun, ist alles schon geschehen

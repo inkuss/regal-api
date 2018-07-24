@@ -105,12 +105,6 @@ public class Webgatherer implements Runnable {
 				if (isOutstanding(n, conf)) {
 					WebgatherLogger.info("Die Website soll jetzt eingesammelt werden.");
 					if (hasUrlMoved(n, conf)) {
-						if (conf.getUrlNew() == null) {
-							WebgatherLogger.info("De Sick is unbekannt vertrocke !");
-						} else {
-							WebgatherLogger
-									.info("De Sick is umjetrocke noh " + conf.getUrlNew() + " .");
-						}
 						WebgatherUtils.prepareWebpageMoving(n, conf);
 					} else {
 						WebgatherLogger
@@ -336,6 +330,7 @@ public class Webgatherer implements Runnable {
 			for (Entry<String, List<String>> header : httpConnection.getHeaderFields()
 					.entrySet()) {
 				if (header.getKey() != null && header.getKey().equals("Location")) {
+					WebgatherLogger.debug("newUrl=" + header.getValue().get(0));
 					conf.setUrlNew(header.getValue().get(0));
 				}
 			}
