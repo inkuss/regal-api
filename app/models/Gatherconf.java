@@ -500,6 +500,7 @@ public class Gatherconf {
 		HttpURLConnection httpConnection = (HttpURLConnection) new URL(
 				WebgatherUtils.convertUnicodeURLToAscii(url)).openConnection();
 		httpConnection.setRequestMethod("GET");
+		httpConnection.setFollowRedirects(false);
 		httpResponseCode = httpConnection.getResponseCode();
 		if (httpResponseCode != 301) {
 			return false;
