@@ -22,9 +22,12 @@ import play.Play;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -32,6 +35,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.ibm.icu.util.Calendar;
@@ -100,7 +104,7 @@ public class Webgatherer implements Runnable {
 				// find open jobs
 				if (isOutstanding(n, conf)) {
 					WebgatherLogger.info("Die Website soll jetzt eingesammelt werden.");
-					if (conf.hasUrlMoved()) {
+					if (hasUrlMoved(n, conf)) {
 						if (conf.getUrlNew() == null) {
 							WebgatherLogger.info("De Sick is unbekannt vertrocke !");
 						} else {
@@ -120,7 +124,7 @@ public class Webgatherer implements Runnable {
 
 			} catch (WebgathererTooBusyException e) {
 				WebgatherLogger.error("Webgatherer stopped! Heritrix is too busy.");
-			} catch (MalformedURLException | URISyntaxException e) {
+			} catch (MalformedURLException e) {
 				setUnknownHost(node, conf);
 				WebgatherLogger.error("Fehlgeformte URL !");
 			} catch (UnknownHostException e) {
@@ -302,4 +306,53 @@ public class Webgatherer implements Runnable {
 		return launchCount;
 	}
 
+	/**
+	 * Stellt fest, ob die URL umgezogen ist.
+	 * 
+	 * @return ob die URL der Webpage umgezogen ist
+	 * @exception MalformedURLException
+	 * @exception IOException
+	 */
+	public static boolean hasUrlMoved(Node n, Gatherconf conf) {
+		WebgatherLogger.debug("probing if URL has moved.");
+		if (conf.getInvalidUrl()) {
+			WebgatherLogger.debug("conf already has an invalid url. ==> HasMoved.");
+			return true;
+		}
+
+		try {
+			WebgatherLogger.debug("establishing connection to url " + conf.getUrl());
+			HttpURLConnection httpConnection = (HttpURLConnection) new URL(
+					WebgatherUtils.convertUnicodeURLToAscii(conf.getUrl()))
+							.openConnection();
+			httpConnection.setRequestMethod("GET");
+			httpConnection.setFollowRedirects(false);
+			int httpResponseCode = httpConnection.getResponseCode();
+			WebgatherLogger.debug("httpResponseCode=" + httpResponseCode);
+			if (httpResponseCode != 301) {
+				return false;
+			}
+			// ermittelt die neue URL (falls bekannt)
+			for (Entry<String, List<String>> header : httpConnection.getHeaderFields()
+					.entrySet()) {
+				if (header.getKey() != null && header.getKey().equals("Location")) {
+					conf.setUrlNew(header.getValue().get(0));
+				}
+			}
+			httpConnection.disconnect();
+			return true;
+		} catch (Exception e) {
+			/*
+			 * Hier wird jetzt eine mail an den Benutzer geschickt. Die URL konnte aus
+			 * unbekannten Gründen nicht bearbeitet werden. Vielleicht liegt ein
+			 * Syntaxfehler vor. In jedem Fall ist eine Benutzeraktion oder
+			 * Überprüfung notwendig.
+			 */
+			setUnknownHost(n, conf);
+			WebgatherLogger.error("Fehlgeformte URL !");
+			WebgatherLogger
+					.error("Url " + conf.getUrl() + " konnte nicht überprüft werden.");
+			throw new RuntimeException(e);
+		}
+	}
 }

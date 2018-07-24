@@ -64,6 +64,7 @@ import authenticate.BasicAuth;
 import helper.HttpArchiveException;
 import helper.JsonMapper;
 import helper.WebgatherUtils;
+import helper.Webgatherer;
 import helper.oai.OaiDispatcher;
 import models.DublinCoreData;
 import models.Gatherconf;
@@ -1053,9 +1054,19 @@ public class Resource extends MyController {
 
 	public static Promise<Result> createVersion(@PathParam("pid") String pid) {
 		return new ModifyAction().call(pid, userId -> {
-			Node node = readNodeOrNull(pid);
-			Node result = create.createWebpageVersion(node);
-			return getJsonResult(result);
+			try {
+				Node node = readNodeOrNull(pid);
+				Gatherconf conf = Gatherconf.create(node.getConf());
+				if (Webgatherer.hasUrlMoved(node, conf)) {
+					return JsonMessage(new Message(
+							"Webseite ist umgezogen! Die Webseite antwortet mit: HTTP 301 permanentyl moved.",
+							400));
+				}
+				Node result = create.createWebpageVersion(node);
+				return getJsonResult(result);
+			} catch (Exception e) {
+				throw new HttpArchiveException(500, e);
+			}
 		});
 	}
 
