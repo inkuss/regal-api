@@ -245,6 +245,27 @@ public class Create extends RegalAction {
 	}
 
 	/**
+	 * Diese Methode legt ein Regal-Objekt "WebpageVersion" (Webschnitt) an. Falls
+	 * Label und Datenstrom schon bekannt sind, wird nicht neu gecrawlt. In diesem
+	 * Fall wird ein Objekt "Version" zu einem schon vorhandenen Crawl angelegt.
+	 * In "datastrean" muss sich dann der vollständige Pfad zu einem komprimierten
+	 * WARC-Archiv befinden. Andernfalls, also falls Label oder Datenstrom leer
+	 * sind, wird ein neuer Crawl zu der Webpage angestoßen.
+	 * 
+	 * @param n der Knoten einer Webpage
+	 * @param label der Label eines bereits vorhandenen Crawls
+	 * @param datastream der vollständige Pfad zur Web-Archivdatei eines
+	 *          vorhandenen Crawls
+	 * @return der Knoten der Webpage-Version
+	 */
+	public Node createWebpageVersion(Node n, String label, String datastream) {
+		if (label.isEmpty() || datastream.isEmpty()) {
+			return createWebpageVersion(n);
+		}
+		// Hier weiter. Nimm Anleihen von "linkWebageVersion"
+	}
+
+	/**
 	 * Diese Methode erzeugt eine neue WebpageVersion (Webschnitt) zu einer
 	 * Webpage. Ein Crawl mit dem gewählten Crawler wird angestoßen.
 	 * 

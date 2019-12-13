@@ -1091,8 +1091,14 @@ public class Resource extends MyController {
 		});
 	}
 
-	public static Promise<Result> createVersion(@PathParam("pid") String pid) {
+	public static Promise<Result> createVersion(@PathParam("pid") String pid,
+			@QueryParam("label") String label,
+			@QueryParam("location") String location) {
 		try {
+			play.Logger.info("create Version pid=" + pid);
+			play.Logger.info("create Version label=" + label);
+			// datastream location
+			play.Logger.info("create Version location=" + location);
 			Node node = readNodeOrNull(pid);
 			Gatherconf conf = Gatherconf.create(node.getConf());
 			if (conf.hasUrlMoved(node)) {
@@ -1101,7 +1107,7 @@ public class Resource extends MyController {
 				});
 			}
 			return new ModifyAction().call(pid, userId -> {
-				Node result = create.createWebpageVersion(node);
+				Node result = create.createWebpageVersion(node, label, datastream);
 				return getJsonResult(result);
 			});
 		} catch (Exception e) {
