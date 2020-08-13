@@ -66,6 +66,7 @@ public class WpullCrawl {
 	private String warcFilename = null;
 	private String msg = null;
 	private int exitState = 0;
+	private int CDNGathererExitState = 0;
 
 	/**
 	 * Die Schreibzugriffe von wpull (Downloads) erfolgen in das Verzeichnis
@@ -226,7 +227,12 @@ public class WpullCrawl {
 			assert pb.redirectInput() == ProcessBuilder.Redirect.PIPE;
 			assert pb.redirectOutput().file() == log;
 			assert proc.getInputStream().read() == -1;
-			WebgatherLogger.info("CDN-Gathering startet successfully !");
+			CDNGathererExitState = proc.waitFor();
+			/**
+			 * Exit-Status: 0 = Crawl erfolgreich beendet
+			 */
+			WebgatherLogger.info("CDN-Crawl für " + conf.getName()
+					+ " wurde beendet mit Exit-Status " + CDNGathererExitState);
 		} catch (Exception e) {
 			WebgatherLogger.error("CDN-Gathering was unsuccessful !", e.toString());
 		}
