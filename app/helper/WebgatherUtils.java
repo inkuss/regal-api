@@ -175,8 +175,10 @@ public class WebgatherUtils {
 					.equals(Gatherconf.CrawlerSelection.wpull)) {
 				WpullCrawl wpullCrawl = new WpullCrawl(node, conf);
 				wpullCrawl.createJob();
-				wpullCrawl.execCDNGatherer();
-				wpullCrawl.startJob(); // Startet Job in neuem Thread
+				/**
+				 * Startet Job in neuem Thread, einschließlich CDN-Precrawl
+				 */
+				wpullCrawl.startJob();
 				crawlDir = wpullCrawl.getCrawlDir();
 				// localpath = wpullCrawl.getLocalpath();
 				if (wpullCrawl.getExitState() != 0) {

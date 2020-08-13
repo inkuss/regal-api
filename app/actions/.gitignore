@@ -1,0 +1,16 @@
+/Activate.class
+/BulkAction.class
+/Create$WebgathererTooBusyException.class
+/Create.class
+/Delete.class
+/Index.class
+/Modify$MetadataNotFoundException.class
+/Modify$NotUpdatedException.class
+/Modify$UpdateNodeException.class
+/Modify.class
+/ProcessNode.class
+/ProcessNodes.class
+/Read.class
+/RegalAction.class
+/Transform.class
+/Enrich.class
