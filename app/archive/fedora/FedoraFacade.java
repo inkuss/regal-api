@@ -465,8 +465,10 @@ public class FedoraFacade {
 	 */
 	public String getPid(String namespace) {
 		try {
+			play.Logger.debug("Getting next PID in Namespace: " + namespace);
 			GetNextPIDResponse response =
 					new GetNextPID().namespace(namespace).execute();
+			play.Logger.debug("Next PID is: " + response.getPid());
 			return response.getPid();
 		} catch (FedoraClientException e) {
 			throw new GetPidException(e.getStatus(), e);
