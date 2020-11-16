@@ -471,6 +471,7 @@ public class FedoraFacade {
 			play.Logger.debug("Next PID is: " + response.getPid());
 			return response.getPid();
 		} catch (FedoraClientException e) {
+			play.Logger.debug(e.getMessage(), e);
 			throw new GetPidException(e.getStatus(), e);
 		}
 	}
