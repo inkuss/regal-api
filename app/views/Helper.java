@@ -173,6 +173,7 @@ public class Helper {
 		JsonNode hit = new ObjectMapper().valueToTree(h);
 		for (JsonNode c : hit.at("/subject")) {
 			if (c.has("componentList")) {
+				play.Logger.debug("c.asText()=" + c.asText());
 				result1.add(getComponentList(c));
 			} else {
 				String label = c.at("/label").asText();
@@ -205,6 +206,8 @@ public class Helper {
 					subject.put("sourceId", sourceId);
 					subject.put("sourceName", getSubjectSource(sourceId, uri, notation));
 					result2.add(subject);
+				} else {
+					play.Logger.debug("label == null");
 				}
 			}
 		}
