@@ -671,6 +671,7 @@ public class Utils {
 			response = new FindObjects().maxResults(50).resultFormat("xml").pid()
 					.terms(rdfQuery).execute();
 		} catch (FedoraClientException e) {
+			play.Logger.debug(e.getMessage(), e);
 			return new Vector<String>();
 		}
 		try {
