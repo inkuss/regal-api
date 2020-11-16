@@ -31,6 +31,7 @@ public class RegalAction {
 	public Node updateIndex(String pid) {
 		removeNodeFromCache(pid);
 		Node node = new Read().readNode(pid);
+		play.Logger.debug("Updating Node with PID: " + node.getPid());
 		new Index().index(node);
 		return node;
 	}
@@ -49,7 +50,8 @@ public class RegalAction {
 
 	protected String createAggregationUri(String pid) {
 		return Globals.useHttpUris
-				? Globals.protocol + Globals.server + "/resource/" + pid : pid;
+				? Globals.protocol + Globals.server + "/resource/" + pid
+				: pid;
 	}
 
 	/**

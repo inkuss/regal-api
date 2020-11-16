@@ -114,6 +114,7 @@ public class Index {
 	 * @return a message
 	 */
 	public String index(Node n) {
+		play.Logger.debug("Starting Index.index for index: " + n.getNamespace());
 		String index = n.getNamespace();
 		String pid = n.getPid();
 		String type = n.getContentType();

@@ -106,7 +106,9 @@ public class Create extends RegalAction {
 	 * @return the updated node
 	 */
 	public Node createResource(String namespace, RegalObject object) {
+		play.Logger.debug("Creating Ressource in namespace: " + namespace);
 		String pid = pid(namespace);
+		play.Logger.debug("Creating Ressource with PID: " + pid);
 		return createResource(pid.split(":")[1], namespace, object);
 	}
 
@@ -117,6 +119,7 @@ public class Create extends RegalAction {
 	 * @return the updated node
 	 */
 	public Node createResource(String id, String namespace, RegalObject object) {
+		play.Logger.debug("Creating Ressource with ID: " + id);
 		Node node = initNode(id, namespace, object);
 		updateResource(node, object);
 		updateIndex(node.getPid());
@@ -136,6 +139,7 @@ public class Create extends RegalAction {
 				"http://" + Globals.server + "/public/edoweb-resources.json");
 		node.setLabel(object.getIsDescribedBy().getName());
 		Globals.fedora.createNode(node);
+		play.Logger.debug("Created Node with PID: " + node.getPid());
 		return node;
 	}
 
