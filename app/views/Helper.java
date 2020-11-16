@@ -196,6 +196,8 @@ public class Helper {
 						 */
 						uri = label;
 					}
+					play.Logger.debug("sourceId=" + sourceId + ", uri=" + uri
+							+ ", notation=" + notation);
 					Map<String, Object> subject = new HashMap<>();
 					subject.put("id", uri);
 					subject.put("label", label);
@@ -327,6 +329,8 @@ public class Helper {
 			String biographicalDetails = createBiographicalDetails(
 					dateOfBirthAndDeath, dateOfBirth, dateOfDeath);
 			String notation = c.at("/notation").asText();
+			play.Logger.debug(
+					"sourceId=" + sourceId + ", uri=" + uri + ", notation=" + notation);
 			Map<String, Object> subject = new HashMap<>();
 			subject.put("id", uri);
 			subject.put("label", name + biographicalDetails);
