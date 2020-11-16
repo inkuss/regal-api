@@ -171,7 +171,7 @@ public class Helper {
 		List<Object> result1 = new ArrayList<>();
 		List<Map<String, Object>> result2 = new ArrayList<>();
 		JsonNode hit = new ObjectMapper().valueToTree(h);
-		play.Logger.debug("hit.asText()=" + hit.asText());
+		play.Logger.debug("hit.asText()=" + hit.toString());
 		for (JsonNode c : hit.at("/subject")) {
 			if (c.has("componentList")) {
 				play.Logger.debug("c.asText()=" + c.asText());
