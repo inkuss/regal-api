@@ -23,6 +23,7 @@ import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import javax.activation.MimetypesFileTypeMap;
 import com.fasterxml.jackson.databind.JsonNode;
 import helper.HttpArchiveException;
 import helper.WebsiteVersionPublisher;
@@ -31,8 +32,8 @@ import helper.WpullCrawl;
 import models.Gatherconf;
 import models.Globals;
 import models.Node;
-import models.RegalObject;
-import models.RegalObject.Provenience;
+import models.ToScienceObject;
+import models.ToScienceObject.Provenience;
 import play.Logger;
 import play.Play;
 
@@ -63,7 +64,7 @@ public class Create extends RegalAction {
 	 * @param object
 	 * @return the updated node
 	 */
-	public Node updateResource(Node node, RegalObject object) {
+	public Node updateResource(Node node, ToScienceObject object) {
 		new Index().remove(node);
 		overrideNodeMembers(node, object);
 		return updateResource(node);
@@ -81,7 +82,7 @@ public class Create extends RegalAction {
 	 * @param object
 	 * @return the updated node
 	 */
-	public Node patchResource(Node node, RegalObject object) {
+	public Node patchResource(Node node, ToScienceObject object) {
 		play.Logger.debug("Patching Node with Pid " + node.getPid());
 		new Index().remove(node);
 		setNodeMembers(node, object);
@@ -96,7 +97,7 @@ public class Create extends RegalAction {
 	 *          nodes in the list
 	 * @return a message
 	 */
-	public String patchResources(List<Node> nodes, RegalObject object) {
+	public String patchResources(List<Node> nodes, ToScienceObject object) {
 		return apply(nodes, n -> patchResource(n, object).getPid());
 	}
 
@@ -105,7 +106,7 @@ public class Create extends RegalAction {
 	 * @param object
 	 * @return the updated node
 	 */
-	public Node createResource(String namespace, RegalObject object) {
+	public Node createResource(String namespace, ToScienceObject object) {
 		String pid = pid(namespace);
 		return createResource(pid.split(":")[1], namespace, object);
 	}
@@ -116,14 +117,15 @@ public class Create extends RegalAction {
 	 * @param object
 	 * @return the updated node
 	 */
-	public Node createResource(String id, String namespace, RegalObject object) {
+	public Node createResource(String id, String namespace,
+			ToScienceObject object) {
 		Node node = initNode(id, namespace, object);
 		updateResource(node, object);
 		updateIndex(node.getPid());
 		return node;
 	}
 
-	private Node initNode(String id, String namespace, RegalObject object) {
+	private Node initNode(String id, String namespace, ToScienceObject object) {
 		Node node = new Node();
 		node.setNamespace(namespace).setPID(namespace + ":" + id);
 		node.setContentType(object.getContentType());
@@ -139,7 +141,7 @@ public class Create extends RegalAction {
 		return node;
 	}
 
-	private void setNodeMembers(Node node, RegalObject object) {
+	private void setNodeMembers(Node node, ToScienceObject object) {
 		if (object.getContentType() != null)
 			setNodeType(object.getContentType(), node);
 		if (object.getAccessScheme() != null)
@@ -167,7 +169,7 @@ public class Create extends RegalAction {
 		OaiDispatcher.makeOAISet(node);
 	}
 
-	private void overrideNodeMembers(Node node, RegalObject object) {
+	private void overrideNodeMembers(Node node, ToScienceObject object) {
 		setNodeType(object.getContentType(), node);
 		node.setAccessScheme(object.getAccessScheme());
 		node.setPublishScheme(object.getPublishScheme());
@@ -292,7 +294,7 @@ public class Create extends RegalAction {
 		try {
 			// Erzeuge ein Fedora-Objekt mit ungemanagtem Inhalt,
 			// das auf den entsprechenden WARC-Container zeigt.
-			RegalObject regalObject = new RegalObject();
+			ToScienceObject regalObject = new ToScienceObject();
 			regalObject.setContentType("version");
 			Provenience prov = regalObject.getIsDescribedBy();
 			prov.setCreatedBy("webgatherer");
@@ -526,7 +528,7 @@ public class Create extends RegalAction {
 			conf.setOpenWaybackLink(localpath);
 
 			// create Regal object
-			RegalObject regalObject = new RegalObject();
+			ToScienceObject regalObject = new ToScienceObject();
 			regalObject.setContentType("version");
 			Provenience prov = regalObject.getIsDescribedBy();
 			prov.setCreatedBy("webgatherer");
@@ -554,6 +556,108 @@ public class Create extends RegalAction {
 			ApplicationLogger.error(
 					"Link unpacked website version {} to webpage {} failed !", versionPid,
 					n.getPid());
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * This method makes consistency checks. It creates a new research data
+	 * resource if the consistency checks have passed.
+	 * 
+	 * 25.11.2020 | Ingolf Kuss | Neuanlage für FRL-522
+	 * 
+	 * @param n Der Knoten (Node) vom Typ Forschungsdaten (researchData)
+	 * @param resourcePid Die gewünschte Pid für die Resssource (7-stellig
+	 *          numerisch) oder leer (Pid wird generiert)
+	 * @param dataDir Datenhauptverzeichnis, unter dem die Ressource (eine Datei
+	 *          beliebigen Dateityps) liegt. Z.B.
+	 *          /ellinet_repo/resources/frl:6424451
+	 * @param filename Der Dateiname der Ressource (ohne Pfadangaben, aber mit
+	 *          Dateiendung) (z.B. tar-Archiv).
+	 * @return a new node of contentType researchDataResource
+	 */
+	public Node postResearchDataResource(Node n, String resourcePid,
+			String dataDir, String filename) {
+		try {
+			if (!"researchData".equals(n.getContentType())) {
+				throw new HttpArchiveException(400, n.getContentType()
+						+ " is not supported. Operation works only on to.science contenType:\"researchData\".");
+			}
+			ApplicationLogger.debug("POST resource for PID " + n.getPid());
+
+			// Hier auf eine bestehende Datei in dataDir verweisen
+			File resourceFile = new File(dataDir + "/" + filename);
+			if (!resourceFile.exists() || resourceFile.isDirectory()) {
+				throw new RuntimeException(
+						resourceFile.getName() + " is not a regular file !");
+			}
+			return createResearchDataResource(n, resourcePid, resourceFile, filename);
+
+		} catch (Exception e) {
+			ApplicationLogger.error(
+					"Creation of research data resource {} for research data (Forschungsdaten) {} has failed !",
+					filename, n.getPid());
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Diese Methode legt einen Node (=allgemeines Modell eines komplexen Objektes
+	 * in der to.science.api) vom contentType "researchDataResource" an. Eine zu
+	 * übergebende Datei (Pfad, Dateiname) wird als ungemanangter Inhalt (Fedora
+	 * unmanaged content) mit dem Node verknüpft. Der neue Node wird an einen
+	 * bestehenden Node des contentTypes "researchData" angehängt.
+	 * 
+	 * 25.11.2020 | Ingolf Kuss | Neuanlage für FRL-522
+	 * 
+	 * @param n Der Knoten vom Typ Forschungsdaten (researchData)
+	 * @param resourcePid Die gewünschte Pid für die Resssource (7-stellig
+	 *          numerisch) oder leer (Pid wird generiert)
+	 * @param resourceFile Die Ressource (Datentyp File), die hinzugefügt werden
+	 *          soll.
+	 * @param filename Der Dateiname der Ressource (ohne Pfadangaben, aber mit
+	 *          Dateiendung) (z.B. tar-Archiv).
+	 * @return a new node of contentType researchDataResource
+	 */
+	public Node createResearchDataResource(Node n, String resourcePid,
+			File resourceFile, String filename) {
+		try {
+			// Erzeuge ein Fedora-Objekt mit ungemanagtem Inhalt,
+			// das auf die Ressource (eine Datei) zeigt
+			ToScienceObject toScienceObject = new ToScienceObject();
+			toScienceObject.setContentType("researchDataResource");
+			Provenience prov = toScienceObject.getIsDescribedBy();
+			prov.setName(filename);
+			toScienceObject.setIsDescribedBy(prov);
+			toScienceObject.setParentPid(n.getPid());
+			Node researchDataResource = null;
+			if ((resourcePid != null) && (!resourcePid.isEmpty())) {
+				researchDataResource =
+						createResource(resourcePid, n.getNamespace(), toScienceObject);
+			} else {
+				researchDataResource =
+						createResource(n.getNamespace(), toScienceObject);
+			}
+
+			new Modify().updateLobidifyAndEnrichMetadata(researchDataResource,
+					"<" + researchDataResource.getPid()
+							+ "> <http://purl.org/dc/terms/title> \"" + filename + "\" .");
+			researchDataResource.setLocalData(resourceFile.toString());
+			researchDataResource
+					.setMimeType(new MimetypesFileTypeMap().getContentType(resourceFile));
+			researchDataResource.setFileLabel(filename);
+			researchDataResource.setAccessScheme(n.getAccessScheme());
+			researchDataResource.setPublishScheme(n.getPublishScheme());
+			researchDataResource = updateResource(researchDataResource);
+
+			ApplicationLogger
+					.info("Successfully created resource " + researchDataResource.getPid()
+							+ "  for research data " + n.getPid() + " !");
+			return researchDataResource;
+		} catch (Exception e) {
+			ApplicationLogger.warn("Creation of a research data resource for PID "
+					+ n.getPid() + " has failed !\n\tReason: " + e.getMessage());
+			ApplicationLogger.debug("", e);
 			throw new RuntimeException(e);
 		}
 	}

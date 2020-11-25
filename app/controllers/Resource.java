@@ -68,7 +68,7 @@ import models.Link;
 import models.MabRecord;
 import models.Message;
 import models.Node;
-import models.RegalObject;
+import models.ToScienceObject;
 import models.UrlHist;
 import play.data.DynamicForm;
 import play.data.Form;
@@ -321,7 +321,7 @@ public class Resource extends MyController {
 				play.Logger.debug("Patching Pid: " + pid);
 				String result = "";
 				Node node = readNodeOrNull(pid);
-				RegalObject object = getRegalObject(request().body().asJson());
+				ToScienceObject object = getRegalObject(request().body().asJson());
 				Node newNode = create.patchResource(node, object);
 				result = newNode.getLastModifyMessage();
 				result = result.concat(" " + newNode.getPid() + " created/updated!");
@@ -339,7 +339,7 @@ public class Resource extends MyController {
 			@ApiImplicitParam(value = "RegalObject wich specifies a values that must be modified in the resource and it's childs", required = true, dataType = "RegalObject", paramType = "body") })
 	public static Promise<Result> patchResources(@PathParam("pid") String pid) {
 		return new BulkActionAccessor().call((userId) -> {
-			RegalObject object = getRegalObject(request().body().asJson());
+			ToScienceObject object = getRegalObject(request().body().asJson());
 			List<Node> list = Globals.fedora.listComplexObject(pid);
 			list.removeIf(n -> "D".equals(n.getState()));
 			BulkAction bulk = new BulkAction();
@@ -359,7 +359,7 @@ public class Resource extends MyController {
 			play.Logger.debug("Updating Pid: " + pid);
 			String result = "";
 			Node node = readNodeOrNull(pid);
-			RegalObject object = getRegalObject(request().body().asJson());
+			ToScienceObject object = getRegalObject(request().body().asJson());
 			Node newNode = null;
 			if (node == null) {
 				String[] namespacePlusId = pid.split(":");
@@ -381,7 +381,7 @@ public class Resource extends MyController {
 	public static Promise<Result> createResource(
 			@PathParam("namespace") String namespace) {
 		return new CreateAction().call((userId) -> {
-			RegalObject object = getRegalObject(request().body().asJson());
+			ToScienceObject object = getRegalObject(request().body().asJson());
 			if (object.getContentType().equals("webpage")) {
 				object.setAccessScheme("restricted");
 			}
@@ -392,13 +392,13 @@ public class Resource extends MyController {
 		});
 	}
 
-	private static RegalObject getRegalObject(JsonNode json) {
+	private static ToScienceObject getRegalObject(JsonNode json) {
 		try {
-			RegalObject object;
+			ToScienceObject object;
 			play.Logger.debug("Json Body: " + json);
 			if (json != null) {
-				object = (RegalObject) MyController.mapper.readValue(json.toString(),
-						RegalObject.class);
+				object = (ToScienceObject) MyController.mapper.readValue(json.toString(),
+						ToScienceObject.class);
 				return object;
 			} else {
 				throw new NullPointerException(
@@ -1163,6 +1163,19 @@ public class Resource extends MyController {
 		});
 	}
 
+	public static Promise<Result> postResearchDataResource(
+			@PathParam("pid") String pid,
+			@QueryParam("resourcePid") String resourcePid,
+			@QueryParam("dataDir") String dataDir,
+			@QueryParam("filename") String filename) {
+		return new ModifyAction().call(pid, userId -> {
+			Node node = readNodeOrNull(pid);
+			Node result =
+					create.postResearchDataResource(node, resourcePid, dataDir, filename);
+			return getJsonResult(result);
+		});
+	}
+
 	@ApiOperation(produces = "application/json", nickname = "linkVersion", value = "linkVersion", response = Result.class, httpMethod = "POST")
 	public static Promise<Result> linkVersion(@PathParam("pid") String pid) {
 		return new ModifyAction().call(pid, userId -> {
@@ -1323,7 +1336,7 @@ public class Resource extends MyController {
 				String alephId = form.get("alephId");
 				String namespace = form.get("namespace");
 				String pid = form.get("pid");
-				RegalObject object = new RegalObject();
+				ToScienceObject object = new ToScienceObject();
 				object.setContentType("monograph");
 				Node node = null;
 				if (pid != null && !pid.isEmpty()) {
