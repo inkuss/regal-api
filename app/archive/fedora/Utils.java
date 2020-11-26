@@ -425,7 +425,9 @@ public class Utils {
 						.controlGroup("E").execute();
 			} else {
 				play.Logger.debug("Add datastream " + node.getPid()
-						+ "/data with unmanaged content" + localpath);
+						+ "/data with unmanaged content " + localpath);
+				play.Logger.debug("MimeType: " + node.getMimeType());
+				play.Logger.debug("FileLabel: " + node.getFileLabel());
 				new AddDatastream(node.getPid(), "data").checksumType("DISABLED")
 						.versionable(true).dsState("A").mimeType(node.getMimeType())
 						.dsLabel(node.getFileLabel()).dsLocation(localpath)

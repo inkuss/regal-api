@@ -645,6 +645,8 @@ public class Create extends RegalAction {
 			researchDataResource.setLocalData(resourceFile.toString());
 			researchDataResource
 					.setMimeType(new MimetypesFileTypeMap().getContentType(resourceFile));
+			researchDataResource.setFileMimeType(
+					new MimetypesFileTypeMap().getContentType(resourceFile));
 			researchDataResource.setFileLabel(filename);
 			researchDataResource.setAccessScheme(n.getAccessScheme());
 			researchDataResource.setPublishScheme(n.getPublishScheme());
