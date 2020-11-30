@@ -80,7 +80,7 @@ POST /resource/:pid/importVersion  	controllers.Resource.importVersion(pid,versi
 POST /resource/:pid/postVersion  	controllers.Resource.postVersion(pid,versionPid?="",dataDir?="",timestamp?="",filename?="")
 POST /resource/:pid/linkVersion  	controllers.Resource.linkVersion(pid)
 POST /resource/:pid/publishVersion  controllers.Resource.publishWebpageVersion(pid,accessScheme?="public")
-POST /resource/:pid/postResearchDataResource	controllers.Resource.postResearchDataResource(pid,resourcePid?="",dataDir?="",filename?="")
+POST /resource/:pid/postResearchData	controllers.Resource.createResearchData(pid,collectionUrl?="data",subPath?="",filename?="",resourcePid?="")
 POST /resource/:namespace			controllers.Resource.createResource(namespace)
 POST /resource/:pid/doi             controllers.Resource.addDoi(pid)
 POST /resource/:pid/doi/update      controllers.Resource.updateDoi(pid)

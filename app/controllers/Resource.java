@@ -91,6 +91,11 @@ import views.html.oai.wgl;
 import views.html.tags.getTitle;
 
 /**
+ * In dieser Klasse werden API-Calls (Endpoint-Calls) auf Ressourcen (sub-path
+ * /resource) definiert. Siehe die Definitionen der HTTP-Requests in der
+ * "routes"-Datei, to.science.api/conf/routes.
+ * 
+ * Zur eigentlichen Verarbeitung der Calls wird an andere Klassen übergeben.
  * 
  * @author Jan Schnasse, schnasse@hbz-nrw.de
  * 
@@ -134,9 +139,8 @@ public class Resource extends MyController {
 		try {
 			if (request().accepts("text/html")) {
 				return htmlList(namespace, contentType, from, until);
-			} else {
-				return jsonList(namespace, contentType, from, until);
 			}
+			return jsonList(namespace, contentType, from, until);
 		} catch (HttpArchiveException e) {
 			return Promise.promise(new Function0<Result>() {
 				public Result apply() {
@@ -285,11 +289,12 @@ public class Resource extends MyController {
 	@ApiOperation(produces = "application/octet-stream", nickname = "listData", value = "listData", notes = "Shows Data of a resource", response = play.mvc.Result.class, httpMethod = "GET")
 	public static Promise<Result> listData(@PathParam("pid") String pid) {
 		return new ReadDataAction().call(pid, node -> {
+			HttpURLConnection connection = null;
 			try {
 				response().setHeader("Access-Control-Allow-Origin", "*");
 				URL url = new URL(Globals.fedoraIntern + "/objects/" + pid
 						+ "/datastreams/data/content");
-				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+				connection = (HttpURLConnection) url.openConnection();
 				response().setContentType(connection.getContentType());
 				response().setHeader("Content-Disposition",
 						"inline;filename=\"" + node.getFileLabel() + "\"");
@@ -397,13 +402,12 @@ public class Resource extends MyController {
 			ToScienceObject object;
 			play.Logger.debug("Json Body: " + json);
 			if (json != null) {
-				object = (ToScienceObject) MyController.mapper.readValue(json.toString(),
+				object = MyController.mapper.readValue(json.toString(),
 						ToScienceObject.class);
 				return object;
-			} else {
-				throw new NullPointerException(
-						"Please PUT at least a type, e.g. {\"type\":\"monograph\"}");
 			}
+			throw new NullPointerException(
+					"Please PUT at least a type, e.g. {\"type\":\"monograph\"}");
 		} catch (JsonMappingException e) {
 			throw new HttpArchiveException(500, e);
 		} catch (JsonParseException e) {
@@ -488,7 +492,7 @@ public class Resource extends MyController {
 				Object o = request().body().asJson();
 				DublinCoreData dc;
 				if (o != null) {
-					dc = (DublinCoreData) MyController.mapper.readValue(o.toString(),
+					dc = MyController.mapper.readValue(o.toString(),
 							DublinCoreData.class);
 				} else {
 					dc = new DublinCoreData();
@@ -546,10 +550,9 @@ public class Resource extends MyController {
 			if (field != null && !field.isEmpty()) {
 				String result = delete.deleteMetadataField(pid, field);
 				return JsonMessage(new Message(result));
-			} else {
-				String result = delete.deleteMetadata(pid);
-				return JsonMessage(new Message(result));
 			}
+			String result = delete.deleteMetadata(pid);
+			return JsonMessage(new Message(result));
 		});
 	}
 
@@ -560,10 +563,9 @@ public class Resource extends MyController {
 			if (field != null && !field.isEmpty()) {
 				String result = delete.deleteMetadata2Field(pid, field);
 				return JsonMessage(new Message(result));
-			} else {
-				String result = delete.deleteMetadata2(pid);
-				return JsonMessage(new Message(result));
 			}
+			String result = delete.deleteMetadata2(pid);
+			return JsonMessage(new Message(result));
 		});
 	}
 
@@ -613,9 +615,8 @@ public class Resource extends MyController {
 
 				if (request().accepts("text/html")) {
 					return ok(resources.render(result));
-				} else {
-					return getJsonResult(result);
 				}
+				return getJsonResult(result);
 			} catch (Exception e) {
 				return JsonMessage(new Message(e, 500));
 			}
@@ -647,10 +648,8 @@ public class Resource extends MyController {
 				}
 				if (request().accepts("text/csv")) {
 					return getCsvResults(new ObjectMapper().valueToTree(hitMap));
-				} else {
-
-					return getJsonResult(hitMap);
 				}
+				return getJsonResult(hitMap);
 			} catch (Exception e) {
 				return JsonMessage(new Message(e, 500));
 			}
@@ -1058,9 +1057,8 @@ public class Resource extends MyController {
 				if (request().accepts("text/html")) {
 					response().setHeader("Content-Type", "text/html; charset=utf-8");
 					return ok(resource.render(result, null));
-				} else {
-					return getJsonResult(result.getLd2());
 				}
+				return getJsonResult(result.getLd2());
 			} catch (Exception e) {
 				return JsonMessage(new Message(e, 500));
 			}
@@ -1075,8 +1073,7 @@ public class Resource extends MyController {
 				Gatherconf conf = null;
 				if (o != null) {
 					play.Logger.debug("o.toString=" + o.toString());
-					conf = (Gatherconf) MyController.mapper.readValue(o.toString(),
-							Gatherconf.class);
+					conf = MyController.mapper.readValue(o.toString(), Gatherconf.class);
 					// hier die neue conf auch im JobDir von Heritrix ablegen
 					conf.setName(pid);
 					conf.setRobotsPolicy(RobotsPolicy.ignore);
@@ -1163,15 +1160,19 @@ public class Resource extends MyController {
 		});
 	}
 
-	public static Promise<Result> postResearchDataResource(
-			@PathParam("pid") String pid,
-			@QueryParam("resourcePid") String resourcePid,
-			@QueryParam("dataDir") String dataDir,
-			@QueryParam("filename") String filename) {
+	/**
+	 * Dieser Endpunkt fügt eine Forschungsdaten-Ressource (Datei) zu einem
+	 * Forschungsdatenobjekt hinzu.
+	 */
+	public static Promise<Result> createResearchData(@PathParam("pid") String pid,
+			@QueryParam("collectionUrl") String collectionUrl,
+			@QueryParam("subPath") String subPath,
+			@QueryParam("filename") String filename,
+			@QueryParam("resourcePid") String resourcePid) {
 		return new ModifyAction().call(pid, userId -> {
 			Node node = readNodeOrNull(pid);
-			Node result =
-					create.postResearchDataResource(node, resourcePid, dataDir, filename);
+			Node result = create.createResearchData(node, collectionUrl, subPath,
+					filename, resourcePid);
 			return getJsonResult(result);
 		});
 	}
@@ -1243,9 +1244,8 @@ public class Resource extends MyController {
 				List<Map<String, Object>> stati = read.getStatus(nodes);
 				if (request().accepts("text/html")) {
 					return htmlStatusList(stati);
-				} else {
-					return getJsonResult(stati);
 				}
+				return getJsonResult(stati);
 			} catch (HttpArchiveException e) {
 				return JsonMessage(new Message(e, e.getCode()));
 			} catch (Exception e) {
@@ -1302,15 +1302,13 @@ public class Resource extends MyController {
 				Node node = readNodeOrNull(pid);
 				if ("monograph".equals(node.getContentType())) {
 					return redirect(routes.Forms.getCatalogForm(node.getPid()));
-				} else {
-					String zettelType = node.getContentType();
-					String rdf = RdfUtils.readRdfToString(
-							new ByteArrayInputStream(node.toString().getBytes("utf-8")),
-							RDFFormat.JSONLD, RDFFormat.RDFXML, node.getAggregationUri());
-					// rdf = java.net.URLEncoder.encode(rdf, "utf-8");
-					return ok(
-							edit.render(zettelType, "ntriples", pid, pid + ".rdf", rdf));
 				}
+				String zettelType = node.getContentType();
+				String rdf = RdfUtils.readRdfToString(
+						new ByteArrayInputStream(node.toString().getBytes("utf-8")),
+						RDFFormat.JSONLD, RDFFormat.RDFXML, node.getAggregationUri());
+				// rdf = java.net.URLEncoder.encode(rdf, "utf-8");
+				return ok(edit.render(zettelType, "ntriples", pid, pid + ".rdf", rdf));
 			} catch (Exception e) {
 				return JsonMessage(new Message(json(e)));
 			}

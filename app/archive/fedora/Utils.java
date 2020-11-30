@@ -78,7 +78,6 @@ import models.Transformer;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.URI;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.repository.Repository;
@@ -379,7 +378,7 @@ public class Utils {
 	/**
 	 * creates a objectTimestamp on node
 	 * 
-	 * @param node
+	 * @param node the node
 	 */
 	public void createObjectTimestampStream(Node node) {
 		try {

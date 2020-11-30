@@ -36,7 +36,8 @@ import de.hbz.lobid.helper.EtikettMakerInterface;
 import com.google.common.net.InetAddresses;
 
 /**
- * Global Settings and accessors for Elasticsearch and Fedora
+ * Global Settings and accessors for Elasticsearch and Fedora. Globale Variablen
+ * aus der zentralen Konfigurationsdatei der Anwendung (application.conf)
  * 
  * @author Jan Schnasse
  *
@@ -346,4 +347,18 @@ public class Globals {
 
 	public static String lobidHbz01 =
 			Play.application().configuration().getString("regal-api.hbz01");
+
+	/**
+	 * Die Basis-URL, unter der Forschungsdaten-Ressourcen abgelegt werden.
+	 * Default-Wert: https://api.localhost/ . Der Standardpfad darunter ist die
+	 * ResearchDataDataUrl mit dem Standardwert "data".
+	 */
+	public static String researchDataBaseUrl = Play.application().configuration()
+			.getString("to.science.api.researchData.BaseUrl");
+	/**
+	 * Der Standardpfad unterhalb dessen Forschungsdaten ablegt werden.
+	 * Standardwert: "data".
+	 */
+	public static String researchDataDataUrl = Play.application().configuration()
+			.getString("to.science.api.researchData.DataUrl");
 }
