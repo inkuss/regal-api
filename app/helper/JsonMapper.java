@@ -464,7 +464,8 @@ public class JsonMapper {
 			}
 			rdf.remove("funding");
 		}
-		List<String> fundingProgram = (List<String>) rdf.get("fundingProgram");
+		List<String> fundingProgram =
+				new ArrayList<String>((java.util.HashSet) rdf.get("fundingProgram"));
 		List<String> projectId = (List<String>) rdf.get("projectId");
 
 		List<Map<String, Object>> joinedFundings = new ArrayList<>();
@@ -717,6 +718,7 @@ public class JsonMapper {
 	private static Map<String, Object> findContributor(Map<String, Object> m,
 			String authorsId) {
 		if (m.get("contributor") instanceof List) {
+			play.Logger.debug("Casting m.get(\"contributor\") to Collection<String>");
 			Collection<String> creators = (Collection<String>) m.get("contributor");
 			play.Logger.trace("" + creators.getClass());
 			for (String creator : creators) {

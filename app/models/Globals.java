@@ -351,14 +351,15 @@ public class Globals {
 	/**
 	 * Die Basis-URL, unter der Forschungsdaten-Ressourcen abgelegt werden.
 	 * Default-Wert: https://api.localhost/ . Der Standardpfad darunter ist die
-	 * ResearchDataDataUrl mit dem Standardwert "data".
+	 * ResearchDataCollectionUrl mit dem Standardwert "data".
 	 */
 	public static String researchDataBaseUrl = Play.application().configuration()
-			.getString("to.science.api.researchData.BaseUrl");
+			.getString("to.science.api.researchData.baseUrl");
 	/**
 	 * Der Standardpfad unterhalb dessen Forschungsdaten ablegt werden.
-	 * Standardwert: "data".
+	 * Standardwert: "data" (analog zu den Sammlungen in Wayback als "Collection"
+	 * bezeichnet).
 	 */
-	public static String researchDataDataUrl = Play.application().configuration()
-			.getString("to.science.api.researchData.DataUrl");
+	public static String researchDataCollectionUrl = Play.application()
+			.configuration().getString("to.science.api.researchData.collectionUrl");
 }

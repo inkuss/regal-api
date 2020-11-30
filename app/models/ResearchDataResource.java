@@ -192,7 +192,7 @@ public class ResearchDataResource implements java.io.Serializable {
 	 */
 
 	private void setDefaultCollectionUrl() {
-		this.collectionUrl = Globals.researchDataDataUrl;
+		this.collectionUrl = Globals.researchDataCollectionUrl;
 	}
 
 	/**
@@ -202,13 +202,14 @@ public class ResearchDataResource implements java.io.Serializable {
 	 */
 	public void buildUrlString() {
 		ApplicationLogger
-				.debug("Begin buidlung url string for filename " + filename);
-		urlString = new String(baseUrl + "/" + collectionUrl);
-		urlString.concat("/" + Globals.defaultNamespace + ":" + parentPid);
+				.debug("Begin building url string for filename " + filename);
+		urlString = new String(baseUrl + "/" + collectionUrl + "/"
+				+ Globals.defaultNamespace + ":" + parentPid);
 		if (subPath != null && !subPath.isEmpty()) {
-			urlString.concat("/" + subPath);
+			urlString = urlString.concat("/" + subPath);
 		}
-		urlString.concat("/" + filename);
+		urlString = urlString.concat("/" + filename);
+		ApplicationLogger.info("Built url string: " + urlString);
 	}
 
 	/**
