@@ -464,8 +464,11 @@ public class JsonMapper {
 			}
 			rdf.remove("funding");
 		}
-		List<String> fundingProgram =
-				new ArrayList<String>((java.util.HashSet) rdf.get("fundingProgram"));
+		List<String> fundingProgram = (List<String>) rdf.get("fundingProgram");
+		/*
+		 * in case of casting problems: List<String> fundingProgram = new
+		 * ArrayList<String>((java.util.HashSet) rdf.get("fundingProgram"));
+		 */
 		List<String> projectId = (List<String>) rdf.get("projectId");
 
 		List<Map<String, Object>> joinedFundings = new ArrayList<>();

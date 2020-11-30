@@ -203,8 +203,7 @@ public class ResearchDataResource implements java.io.Serializable {
 	public void buildUrlString() {
 		ApplicationLogger
 				.debug("Begin building url string for filename " + filename);
-		urlString = new String(baseUrl + "/" + collectionUrl + "/"
-				+ Globals.defaultNamespace + ":" + parentPid);
+		urlString = new String(baseUrl + "/" + collectionUrl + "/" + parentPid);
 		if (subPath != null && !subPath.isEmpty()) {
 			urlString = urlString.concat("/" + subPath);
 		}
@@ -256,19 +255,33 @@ public class ResearchDataResource implements java.io.Serializable {
 			url = new URL(urlString);
 			urlConnection = (HttpURLConnection) url.openConnection();
 			urlConnection.setRequestMethod("HEAD");
+			// Set timeouts in milliseconds
+			urlConnection.setConnectTimeout(30000);
+			urlConnection.setReadTimeout(30000);
 			urlConnection.connect();
-			ApplicationLogger.info("Forschungsdatenressource ist unter der URL "
-					+ urlString + " verfügbar, yeah!");
-			contentType = urlConnection.getHeaderField("Content-Type");
-			available = true;
+			if (urlConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+				ApplicationLogger.warn("URL response code is not OK, but "
+						+ urlConnection.getResponseCode() + " !");
+				ApplicationLogger.info("Die Forschungsdatenressource " + filename
+						+ " ist unter der URL " + urlString + " nicht erreichbar, oh no!");
+				available = false;
+			} else {
+				ApplicationLogger.info("Die Forschungsdatenressource ist unter der URL "
+						+ urlString + " verfügbar, yeah!");
+				contentType = urlConnection.getHeaderField("Content-Type");
+				available = true;
+			}
+			return;
 		} catch (MalformedURLException e) {
-			ApplicationLogger.warn("Die für die Datei " + filename
+			ApplicationLogger.error("Die für die Datei " + filename
 					+ " ermittelte URL, " + urlString + ", ist fehlgeformt!");
 			// e.printStackTrace();
 			throw new IllegalStateException("Bad URL: " + url, e);
-		} catch (IOException e) {
-			ApplicationLogger.info("Die Forschungsdatenressource " + filename
-					+ " ist unter der URL " + urlString + " nicht erreichbar, oh no!", e);
+		} catch (Exception e) {
+			ApplicationLogger.warn(
+					"Fehler bei der Ermittlung der Verfügbarkeit der Forschungsdatenressource "
+							+ filename + " unter der URL " + urlString + ", oh no!",
+					e);
 			available = false;
 			// e.printStackTrace();
 		} finally {
