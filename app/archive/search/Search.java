@@ -241,7 +241,11 @@ public class Search {
 	 */
 	public List<String> indexAll(List<Node> list, String index) {
 		init(index);
+		init(index + "2");
 		init(Globals.PUBLIC_INDEX_PREF + index);
+		init(Globals.PUBLIC_INDEX_PREF + index + "2");
+		init(Globals.PDFBOX_OCR_INDEX_PREF + index);
+		init(Globals.PDFBOX_OCR_INDEX_PREF + index + "2");
 		List<String> result = new ArrayList<String>();
 		BulkRequestBuilder internalIndexBulk = client.prepareBulk();
 		BulkRequestBuilder publicIndexBulk = client.prepareBulk();
@@ -254,8 +258,12 @@ public class Search {
 				internalIndexBulk.add(
 						client.prepareIndex(index, node.getContentType(), node.getPid())
 								.setSource(source));
-
 				msg.append(index);
+				internalIndexBulk.add(client
+						.prepareIndex(index + "2", node.getContentType(), node.getPid())
+						.setSource(source));
+				msg.append(" and " + index + "2");
+
 				if ("public".equals(node.getPublishScheme())) {
 					if ("monograph".equals(node.getContentType())
 							|| "journal".equals(node.getContentType())
@@ -267,9 +275,15 @@ public class Search {
 												node.getContentType(), node.getPid())
 										.setSource(source));
 						msg.append(" and " + Globals.PUBLIC_INDEX_PREF + index);
+						publicIndexBulk
+								.add(client
+										.prepareIndex(Globals.PUBLIC_INDEX_PREF + index + "2",
+												node.getContentType(), node.getPid())
+										.setSource(source));
+						msg.append(" and " + Globals.PUBLIC_INDEX_PREF + index + "2");
 					}
-
 				}
+
 				if ("public".equals(node.getAccessScheme())) {
 					if ("file".equals(node.getContentType())) {
 						publicIndexBulk.add(client
@@ -277,6 +291,11 @@ public class Search {
 										node.getContentType(), node.getPid())
 								.setSource(new Transform().pdfbox(node).toString()));
 						msg.append(" and " + Globals.PDFBOX_OCR_INDEX_PREF + index);
+						publicIndexBulk.add(client
+								.prepareIndex(Globals.PDFBOX_OCR_INDEX_PREF + index + "2",
+										node.getContentType(), node.getPid())
+								.setSource(new Transform().pdfbox(node).toString()));
+						msg.append(" and " + Globals.PDFBOX_OCR_INDEX_PREF + index + "2");
 					}
 				}
 				msg.append("\n");
