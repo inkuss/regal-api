@@ -86,7 +86,7 @@ public class Create extends RegalAction {
 		return updateResource(node);
 	}
 
-	private Node updateResource(Node node) {
+	public Node updateResource(Node node) {
 		play.Logger.debug("Updating Node with Pid " + node.getPid());
 		Globals.fedora.updateNode(node);
 		updateIndex(node.getPid());

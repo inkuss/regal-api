@@ -27,8 +27,12 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import actions.Create;
+import actions.Modify;
 import play.Logger;
+import play.Play;
 import helper.HttpArchiveException;
+import models.ToScienceObject.Provenience;
 
 /**
  * Diese Klasse implementiert eine Forschungsdaten-Ressource. Üblicherweise ist
@@ -56,6 +60,7 @@ public class ResearchDataResource implements java.io.Serializable {
 	private String urlString = null;
 	private boolean available = false;
 	private String contentType = null;
+	private static Create create = new Create();
 
 	/**
 	 * Standard-Konstruktor der Klasse (ohne Parameter)
@@ -300,16 +305,46 @@ public class ResearchDataResource implements java.io.Serializable {
 	 * der Fall ist, wird die Überordnung angelegt.
 	 */
 	public void chkCreatePart() {
-		ApplicationLogger.debug(
-				"Checking whether we need to create a Part (Überordnung) for the SubPath.");
-		if (subPath == null || subPath.isEmpty()) {
+		try {
+			ApplicationLogger.debug(
+					"Checking whether we need to create a Part (Überordnung) for the SubPath.");
+			if (subPath == null || subPath.isEmpty()) {
+				return;
+			}
+			if (chkPartExists() == true) {
+				ApplicationLogger.debug(
+						"Eine Überordnung, die (" + subPath + ") heißt, gibt es schon.");
+				return;
+			}
+			ApplicationLogger.debug(
+					"Eine Überordnung für den Unterpfad " + subPath + " wird angelegt.");
+			/*
+			 * Erzeuge ein Fedora-Objekt vom Typ "part" (Überordnung) und hänge es
+			 * unter das Forschungsdatenobjekt
+			 */
+			ToScienceObject regalObject = new ToScienceObject();
+			regalObject.setContentType("part");
+			Provenience prov = regalObject.getIsDescribedBy();
+			prov.setCreatedBy(Globals.fedoraUser);
+			prov.setName(subPath);
+			regalObject.setIsDescribedBy(prov);
+			regalObject.setParentPid(parentPid);
+			Node part = create.createResource(parentNode.getNamespace(), regalObject);
+			part.setAccessScheme(parentNode.getAccessScheme());
+			part.setPublishScheme(parentNode.getPublishScheme());
+			part = create.updateResource(part);
+
+			ApplicationLogger
+					.info("Überordnung (" + subPath + ") mit PID " + part.getPid()
+							+ " wurde erzeugt und unter " + parentPid + "gehängt.");
 			return;
+
+		} catch (Exception e) {
+			ApplicationLogger.warn("Anlage einer Überordnung " + subPath + " zur PID "
+					+ parentPid + " ist fehlgeschlagen !");
+			ApplicationLogger.debug("", e);
+			throw new RuntimeException(e);
 		}
-		if (chkPartExists() == true) {
-			return;
-		}
-		ApplicationLogger.debug(
-				"Eine Überordnung für den subPath " + subPath + " wird angelegt.");
 	}
 
 	/**
@@ -323,8 +358,11 @@ public class ResearchDataResource implements java.io.Serializable {
 		List<Link> getLinks = parentNode.getLinks();
 		for (Link l : getLinks) {
 			if (HAS_PART.equals(l.getPredicate())) {
-				ApplicationLogger.debug("HAS_PART: (" + l.getObject() + ") )"
+				ApplicationLogger.debug("HAS_PART: (" + l.getObject() + ") ("
 						+ l.getObjectLabel() + ") (" + l.getPredicateLabel() + ")");
+				if (l.getObjectLabel().equals(subPath)) {
+					return true;
+				}
 			}
 		}
 		return false;
