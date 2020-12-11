@@ -25,6 +25,8 @@ import java.util.Date;
 import java.util.List;
 // import javax.activation.MimetypesFileTypeMap;
 import com.fasterxml.jackson.databind.JsonNode;
+
+import controllers.MyController;
 import helper.HttpArchiveException;
 import helper.WebsiteVersionPublisher;
 import helper.oai.OaiDispatcher;
@@ -600,7 +602,8 @@ public class Create extends RegalAction {
 	 * (Forschungsdaten-Ressource) an. Eine zu übergebende Datei (URL-Pfad,
 	 * Dateiname) wird als ungemanangter Inhalt (Fedora unmanaged content) mit dem
 	 * Node verknüpft. Der neue Node wird an einen bestehenden Node des
-	 * contentTypes "researchData" (Forschungsdaten) angehängt.
+	 * contentTypes "researchData" (Forschungsdaten) angehängt, oder an eine
+	 * Überordnung, die unterhalb diese Knotens hängt.
 	 * 
 	 * @author Ingolf Kuss 30.11.2020 | Neuanlage für FRL-522
 	 * 
@@ -622,17 +625,23 @@ public class Create extends RegalAction {
 		try {
 			ApplicationLogger
 					.debug("Create research data resource for PID " + n.getPid());
+			String parentPid = n.getPid();
+			// Gucke, ob eine Überordnung angelegt werden muss und lege sie ggfs. an
 			ResearchDataResource resource = new ResearchDataResource();
-			resource.setParentNode(n);
+			resource.setParentNode(n); // first guess, might be changed if subPath is
+																	// present
 			resource.setCollectionUrl(collectionUrl);
 			resource.setSubPath(subPath);
 			resource.setFilename(filename);
 			resource.setResourcePid(resourcePid);
 
-			resource.doConsistencyChecks();
+			if (subPath != null && !subPath.isEmpty()) {
+				resource.chkCreatePart();
+				Node part = new Read().readNode(resource.getPartPid());
+				resource.setParentNode(part);
+			}
 
-			// Gucke, ob eine Überordnung angelegt werden muss und lege sie ggfs. an
-			resource.chkCreatePart();
+			resource.doConsistencyChecks();
 
 			// Erzeuge ein Fedora-Objekt mit ungemanagtem Inhalt,
 			// das auf die Ressource (zugänglich über eine URL) zeigt
@@ -643,7 +652,7 @@ public class Create extends RegalAction {
 			prov.setName(filename);
 			prov.setImportedFrom(resource.getUrlString());
 			toScienceObject.setIsDescribedBy(prov);
-			toScienceObject.setParentPid(n.getPid());
+			toScienceObject.setParentPid(resource.getPartPid());
 			Node researchDataResource = null;
 			if ((resourcePid != null) && (!resourcePid.isEmpty())) {
 				researchDataResource =

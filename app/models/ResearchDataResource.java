@@ -55,6 +55,7 @@ public class ResearchDataResource implements java.io.Serializable {
 	private static String baseUrl = Globals.researchDataBaseUrl;
 	private String collectionUrl = null;
 	private String subPath = null;
+	private String partPid = null;
 	private String filename = null;
 	private String resourcePid = null;
 	private String urlString = null;
@@ -125,6 +126,13 @@ public class ResearchDataResource implements java.io.Serializable {
 	 */
 	public String getSubPath() {
 		return this.subPath;
+	}
+
+	/**
+	 * @return Die PID der Überordnung, die zum Unterpfad "SubPath" gehört.
+	 */
+	public String getPartPid() {
+		return this.partPid;
 	}
 
 	/**
@@ -333,6 +341,7 @@ public class ResearchDataResource implements java.io.Serializable {
 			part.setAccessScheme(parentNode.getAccessScheme());
 			part.setPublishScheme(parentNode.getPublishScheme());
 			part = create.updateResource(part);
+			this.partPid = part.getPid();
 
 			ApplicationLogger
 					.info("Überordnung (" + subPath + ") mit PID " + part.getPid()
@@ -361,6 +370,7 @@ public class ResearchDataResource implements java.io.Serializable {
 				ApplicationLogger.debug("HAS_PART: (" + l.getObject() + ") ("
 						+ l.getObjectLabel() + ") (" + l.getPredicateLabel() + ")");
 				if (l.getObjectLabel().equals(subPath)) {
+					this.partPid = l.getObject();
 					return true;
 				}
 			}
