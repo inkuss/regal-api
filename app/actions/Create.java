@@ -628,6 +628,7 @@ public class Create extends RegalAction {
 			String parentPid = n.getPid();
 
 			ResearchDataResource resource = new ResearchDataResource();
+			resource.setResearchDataNode(n);
 			/* first guess for parent, will be changed if subPath is present */
 			resource.setParentNode(n);
 			resource.setCollectionUrl(collectionUrl);
@@ -653,7 +654,7 @@ public class Create extends RegalAction {
 			prov.setName(filename);
 			prov.setImportedFrom(resource.getUrlString());
 			toScienceObject.setIsDescribedBy(prov);
-			toScienceObject.setParentPid(resource.getPartPid());
+			toScienceObject.setParentPid(resource.getParentNode().getPid());
 			Node researchDataResource = null;
 			if ((resourcePid != null) && (!resourcePid.isEmpty())) {
 				researchDataResource =
