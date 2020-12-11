@@ -626,22 +626,23 @@ public class Create extends RegalAction {
 			ApplicationLogger
 					.debug("Create research data resource for PID " + n.getPid());
 			String parentPid = n.getPid();
-			// Gucke, ob eine Überordnung angelegt werden muss und lege sie ggfs. an
+
 			ResearchDataResource resource = new ResearchDataResource();
-			resource.setParentNode(n); // first guess, might be changed if subPath is
-																	// present
+			/* first guess for parent, will be changed if subPath is present */
+			resource.setParentNode(n);
 			resource.setCollectionUrl(collectionUrl);
 			resource.setSubPath(subPath);
 			resource.setFilename(filename);
 			resource.setResourcePid(resourcePid);
 
+			// Gucke, ob eine Überordnung angelegt werden muss und lege sie ggfs. an
 			if (subPath != null && !subPath.isEmpty()) {
 				resource.chkCreatePart();
 				Node part = new Read().readNode(resource.getPartPid());
 				resource.setParentNode(part);
 			}
 
-			resource.doConsistencyChecks(n);
+			resource.doConsistencyChecks();
 
 			// Erzeuge ein Fedora-Objekt mit ungemanagtem Inhalt,
 			// das auf die Ressource (zugänglich über eine URL) zeigt

@@ -52,6 +52,8 @@ public class ResearchDataResource implements java.io.Serializable {
 			Logger.of("application");
 	private Node parentNode = null;
 	private String parentPid = null;
+	private Node researchDataNode = null;
+	private String researchDataPid = null;
 	private static String baseUrl = Globals.researchDataBaseUrl;
 	private String collectionUrl = null;
 	private String subPath = null;
@@ -75,8 +77,8 @@ public class ResearchDataResource implements java.io.Serializable {
 	 */
 
 	/**
-	 * @param parentNode Der übergeordnete Knoten (Node) vom contentType
-	 *          "researchData"
+	 * @param parentNode Der übergeordnete Knoten (Node). Kann vom Type
+	 *          "Forschungsdaten" sein, aber auch eine "Überordnung".
 	 */
 	public void setParentNode(Node parentNode) {
 		this.parentNode = parentNode;
@@ -84,10 +86,26 @@ public class ResearchDataResource implements java.io.Serializable {
 	}
 
 	/**
-	 * @return Der übergeordnete Knoten (Node) vom contentType "researchData"
+	 * @return Der übergeordnete Knoten (Node)
 	 */
 	public Node getParentNode() {
 		return parentNode;
+	}
+
+	/**
+	 * @param researchDataNode Der übergeordnete Knoten vom Typ "Forschungsdaten"
+	 *          (kann zwei Ebenen höher liegen, falls Unterpfadde existieren).
+	 */
+	public void setResearchDataNode(Node researchDataNode) {
+		this.researchDataNode = researchDataNode;
+		this.researchDataPid = researchDataNode.getPid();
+	}
+
+	/**
+	 * @return Der übergeordnete Knoten vom Typ Forschungdaten.
+	 */
+	public Node getResearchDataNode() {
+		return researchDataNode;
 	}
 
 	/**
@@ -214,13 +232,14 @@ public class ResearchDataResource implements java.io.Serializable {
 
 	/**
 	 * Diese Methode baut die URL, unter der die Ressource erreichbar ist,
-	 * zusammen. Aus baseUrl, collectionUrl, parentPid, subPath und filename wird
-	 * eine URL zusammengebaut, die auf die Ressource verweist.
+	 * zusammen. Aus baseUrl, collectionUrl, researchDataPid, subPath und filename
+	 * wird eine URL zusammengebaut, die auf die Ressource verweist.
 	 */
 	public void buildUrlString() {
 		ApplicationLogger
 				.debug("Begin building url string for filename " + filename);
-		urlString = new String(baseUrl + "/" + collectionUrl + "/" + parentPid);
+		urlString =
+				new String(baseUrl + "/" + collectionUrl + "/" + researchDataPid);
 		if (subPath != null && !subPath.isEmpty()) {
 			urlString = urlString.concat("/" + subPath);
 		}
@@ -233,16 +252,15 @@ public class ResearchDataResource implements java.io.Serializable {
 	 * aus. Bei inkonsistenten Eigenschaften der Klasseninstanz wird eine Ausnahme
 	 * geschmissen.
 	 * 
-	 * @param n der Forschungsdaten-Node
 	 */
-	public void doConsistencyChecks(Node n) {
+	public void doConsistencyChecks() {
 		try {
 			ApplicationLogger.debug(
 					"Perfomring consistency checks on research data resource for parent PID "
-							+ n.getPid());
+							+ researchDataNode.getPid());
 
-			if (!"researchData".equals(n.getContentType())) {
-				throw new HttpArchiveException(400, parentNode.getContentType()
+			if (!"researchData".equals(researchDataNode.getContentType())) {
+				throw new HttpArchiveException(400, researchDataNode.getContentType()
 						+ " is not supported. Operation works only on to.science contentType:\"researchData\".");
 			}
 
@@ -255,7 +273,7 @@ public class ResearchDataResource implements java.io.Serializable {
 		} catch (Exception e) {
 			ApplicationLogger.error(
 					"Konsistenzprüfung für Forschungsdaten-Ressource {} an Forschungsdaten PID {} fehlgeschlagen !",
-					filename, n.getPid());
+					filename, researchDataNode.getPid());
 			throw new RuntimeException(e);
 		}
 	}
@@ -339,21 +357,22 @@ public class ResearchDataResource implements java.io.Serializable {
 			prov.setCreatedBy(Globals.fedoraUser);
 			prov.setName(subPath);
 			regalObject.setIsDescribedBy(prov);
-			regalObject.setParentPid(parentPid);
-			Node part = create.createResource(parentNode.getNamespace(), regalObject);
-			part.setAccessScheme(parentNode.getAccessScheme());
-			part.setPublishScheme(parentNode.getPublishScheme());
+			regalObject.setParentPid(researchDataPid);
+			Node part =
+					create.createResource(researchDataNode.getNamespace(), regalObject);
+			part.setAccessScheme(researchDataNode.getAccessScheme());
+			part.setPublishScheme(researchDataNode.getPublishScheme());
 			part = create.updateResource(part);
 			this.partPid = part.getPid();
 
 			ApplicationLogger
 					.info("Überordnung (" + subPath + ") mit PID " + part.getPid()
-							+ " wurde erzeugt und unter " + parentPid + "gehängt.");
+							+ " wurde erzeugt und unter " + researchDataPid + "gehängt.");
 			return;
 
 		} catch (Exception e) {
 			ApplicationLogger.warn("Anlage einer Überordnung " + subPath + " zur PID "
-					+ parentPid + " ist fehlgeschlagen !");
+					+ researchDataPid + " ist fehlgeschlagen !");
 			ApplicationLogger.debug("", e);
 			throw new RuntimeException(e);
 		}
@@ -366,8 +385,8 @@ public class ResearchDataResource implements java.io.Serializable {
 	 * @return boolean: true: part already exists; false: part does not exist, yet
 	 */
 	public boolean chkPartExists() {
-		// Lies alle Kinder von parentNode
-		List<Link> getLinks = parentNode.getLinks();
+		// Lies alle Kinder von researchDataNode
+		List<Link> getLinks = researchDataNode.getLinks();
 		for (Link l : getLinks) {
 			if (HAS_PART.equals(l.getPredicate())) {
 				ApplicationLogger.debug("HAS_PART: (" + l.getObject() + ") ("
