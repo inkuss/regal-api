@@ -641,7 +641,7 @@ public class Create extends RegalAction {
 				resource.setParentNode(part);
 			}
 
-			resource.doConsistencyChecks();
+			resource.doConsistencyChecks(n);
 
 			// Erzeuge ein Fedora-Objekt mit ungemanagtem Inhalt,
 			// das auf die Ressource (zugänglich über eine URL) zeigt

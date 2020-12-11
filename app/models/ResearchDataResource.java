@@ -229,16 +229,19 @@ public class ResearchDataResource implements java.io.Serializable {
 	}
 
 	/**
-	 * Diese Methode führt Konsistenzprüfungen aus. Bei inkonsistenten
-	 * Eigenschaften der Klasseninstanz wird eine Ausnahme geschmissen.
+	 * Diese Methode führt Konsistenzprüfungen auf einen Forschungdsdaten-Node
+	 * aus. Bei inkonsistenten Eigenschaften der Klasseninstanz wird eine Ausnahme
+	 * geschmissen.
+	 * 
+	 * @param n der Forschungsdaten-Node
 	 */
-	public void doConsistencyChecks() {
+	public void doConsistencyChecks(Node n) {
 		try {
 			ApplicationLogger.debug(
 					"Perfomring consistency checks on research data resource for parent PID "
-							+ parentNode.getPid());
+							+ n.getPid());
 
-			if (!"researchData".equals(parentNode.getContentType())) {
+			if (!"researchData".equals(n.getContentType())) {
 				throw new HttpArchiveException(400, parentNode.getContentType()
 						+ " is not supported. Operation works only on to.science contentType:\"researchData\".");
 			}
@@ -251,8 +254,8 @@ public class ResearchDataResource implements java.io.Serializable {
 
 		} catch (Exception e) {
 			ApplicationLogger.error(
-					"Konsistenzprüfung für Forschungsdaten-Ressource {} an Parent PID {} fehlgeschlagen !",
-					filename, parentNode.getPid());
+					"Konsistenzprüfung für Forschungsdaten-Ressource {} an Forschungsdaten PID {} fehlgeschlagen !",
+					filename, n.getPid());
 			throw new RuntimeException(e);
 		}
 	}
