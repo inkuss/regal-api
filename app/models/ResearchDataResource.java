@@ -16,10 +16,14 @@
  */
 package models;
 
+import static archive.fedora.FedoraVocabulary.HAS_PART;
+import static archive.fedora.FedoraVocabulary.IS_PART_OF;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -289,6 +293,41 @@ public class ResearchDataResource implements java.io.Serializable {
 				urlConnection.disconnect();
 			}
 		}
+	}
+
+	/**
+	 * Diese Methode prüft, ob eine Überordnung angelegt werden muss. Falls das
+	 * der Fall ist, wird die Überordnung angelegt.
+	 */
+	public void chkCreatePart() {
+		ApplicationLogger.debug(
+				"Checking whether we need to create a Part (Überordnung) for the SubPath.");
+		if (subPath == null || subPath.isEmpty()) {
+			return;
+		}
+		if (chkPartExists() == true) {
+			return;
+		}
+		ApplicationLogger.debug(
+				"Eine Überordnung für den subPath " + subPath + " wird angelegt.");
+	}
+
+	/**
+	 * Diese Methode prüft, ob eine Überordnung (resourceType: part) für den
+	 * subPath bereits existiert.
+	 * 
+	 * @return boolean: true: part already exists; false: part does not exist, yet
+	 */
+	public boolean chkPartExists() {
+		// Lies alle Kinder von parentNode
+		List<Link> getLinks = parentNode.getLinks();
+		for (Link l : getLinks) {
+			if (HAS_PART.equals(l.getPredicate())) {
+				ApplicationLogger.debug("HAS_PART: (" + l.getObject() + ") )"
+						+ l.getObjectLabel() + ") (" + l.getPredicateLabel() + ")");
+			}
+		}
+		return false;
 	}
 
 }

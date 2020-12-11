@@ -608,7 +608,9 @@ public class Create extends RegalAction {
 	 * @param collectionUrl der URL-Pfad unterhalb des Basis-URL, unter der
 	 *          Forschungsdatenressourcen abgelegt sind. Standardwert: "data"
 	 * @param subPath ein optionaler Unterpfad in dem Verzeichnis, in dem für
-	 *          diese PID Forschungsdaten abgelegt sind. Standardwert: ""
+	 *          diese PID Forschungsdaten abgelegt sind. Standardwert: "". Falls
+	 *          der Unterpfad nicht leer ist, wird für ihn eine Überordnung
+	 *          angelegt, sofern diese noch nicht vorhanden ist.
 	 * @param filename Der Dateiname der Ressource (ohne Pfadangaben, aber mit
 	 *          Dateiendung)
 	 * @param resourcePid Die gewünschte Pid für die Resssource (7-stellig
@@ -628,6 +630,9 @@ public class Create extends RegalAction {
 			resource.setResourcePid(resourcePid);
 
 			resource.doConsistencyChecks();
+
+			// Gucke, ob eine Überordnung angelegt werden muss und lege sie ggfs. an
+			resource.chkCreatePart();
 
 			// Erzeuge ein Fedora-Objekt mit ungemanagtem Inhalt,
 			// das auf die Ressource (zugänglich über eine URL) zeigt
