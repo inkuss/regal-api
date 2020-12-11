@@ -362,6 +362,7 @@ public class ResearchDataResource implements java.io.Serializable {
 					create.createResource(researchDataNode.getNamespace(), regalObject);
 			part.setAccessScheme(researchDataNode.getAccessScheme());
 			part.setPublishScheme(researchDataNode.getPublishScheme());
+			part.setLabel(subPath);
 			part = create.updateResource(part);
 			this.partPid = part.getPid();
 
