@@ -17,9 +17,7 @@
 package models;
 
 import static archive.fedora.FedoraVocabulary.HAS_PART;
-import static archive.fedora.FedoraVocabulary.IS_PART_OF;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -29,8 +27,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import actions.Create;
 import actions.Modify;
+import actions.Read;
 import play.Logger;
-import play.Play;
 import helper.HttpArchiveException;
 import models.ToScienceObject.Provenience;
 
@@ -57,7 +55,6 @@ public class ResearchDataResource implements java.io.Serializable {
 	private static String baseUrl = Globals.researchDataBaseUrl;
 	private String collectionUrl = null;
 	private String subPath = null;
-	private String partPid = null;
 	private String filename = null;
 	private String resourcePid = null;
 	private String urlString = null;
@@ -78,7 +75,10 @@ public class ResearchDataResource implements java.io.Serializable {
 
 	/**
 	 * @param parentNode Der übergeordnete Knoten (Node). Kann vom Type
-	 *          "Forschungsdaten" sein, aber auch eine "Überordnung".
+	 *          "Forschungsdaten" sein, aber auch eine "Überordnung". Falls
+	 *          "subPath" gesetzt ist, ist parentNode die Überordnung, die zum
+	 *          Unterpfad subPath gehört. Fall subPath leer ist, ist parentNode
+	 *          der Forschungsdaten-Knoten.
 	 */
 	public void setParentNode(Node parentNode) {
 		this.parentNode = parentNode;
@@ -144,13 +144,6 @@ public class ResearchDataResource implements java.io.Serializable {
 	 */
 	public String getSubPath() {
 		return this.subPath;
-	}
-
-	/**
-	 * @return Die PID der Überordnung, die zum Unterpfad "SubPath" gehört.
-	 */
-	public String getPartPid() {
-		return this.partPid;
 	}
 
 	/**
@@ -360,11 +353,13 @@ public class ResearchDataResource implements java.io.Serializable {
 			regalObject.setParentPid(researchDataPid);
 			Node part =
 					create.createResource(researchDataNode.getNamespace(), regalObject);
+			new Modify().updateLobidifyAndEnrichMetadata(part, "<" + part.getPid()
+					+ "> <http://purl.org/dc/terms/title> \"" + subPath + "\" .");
 			part.setAccessScheme(researchDataNode.getAccessScheme());
 			part.setPublishScheme(researchDataNode.getPublishScheme());
 			part.setLabel(subPath);
 			part = create.updateResource(part);
-			this.partPid = part.getPid();
+			setParentNode(part);
 
 			ApplicationLogger
 					.info("Überordnung (" + subPath + ") mit PID " + part.getPid()
@@ -393,7 +388,9 @@ public class ResearchDataResource implements java.io.Serializable {
 				ApplicationLogger.debug("HAS_PART: (" + l.getObject() + ") ("
 						+ l.getObjectLabel() + ") (" + l.getPredicateLabel() + ")");
 				if (l.getObjectLabel().equals(subPath)) {
-					this.partPid = l.getObject();
+					/* Setzt den parentNode der Ressource auf die gefundene Überordnung */
+					this.parentPid = l.getObject();
+					this.parentNode = new Read().readNode(this.parentPid);
 					return true;
 				}
 			}

@@ -625,7 +625,6 @@ public class Create extends RegalAction {
 		try {
 			ApplicationLogger
 					.debug("Create research data resource for PID " + n.getPid());
-			String parentPid = n.getPid();
 
 			ResearchDataResource resource = new ResearchDataResource();
 			resource.setResearchDataNode(n);
@@ -639,8 +638,6 @@ public class Create extends RegalAction {
 			// Gucke, ob eine Überordnung angelegt werden muss und lege sie ggfs. an
 			if (subPath != null && !subPath.isEmpty()) {
 				resource.chkCreatePart();
-				Node part = new Read().readNode(resource.getPartPid());
-				resource.setParentNode(part);
 			}
 
 			resource.doConsistencyChecks();
