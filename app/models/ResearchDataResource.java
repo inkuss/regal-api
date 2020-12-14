@@ -18,6 +18,7 @@ package models;
 
 import static archive.fedora.FedoraVocabulary.HAS_PART;
 
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;

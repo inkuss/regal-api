@@ -678,6 +678,12 @@ public class Create extends RegalAction {
 			researchDataResource.setFileLabel(filename);
 			researchDataResource.setAccessScheme(n.getAccessScheme());
 			researchDataResource.setPublishScheme(n.getPublishScheme());
+			/*
+			 * hier werden erst mal standardmäßig im ersten Aufschlag alle
+			 * Forschungsdatenressourcen auf fiktive 100 KB Größe gesetzt
+			 */
+			BigInteger sizeInByte = new BigInteger("100000");
+			researchDataResource.setFileSize(sizeInByte);
 			ApplicationLogger.info("localData = " + resource.getUrlString());
 			researchDataResource = updateResource(researchDataResource);
 

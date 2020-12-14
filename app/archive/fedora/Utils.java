@@ -47,6 +47,8 @@ import static archive.fedora.Vocabulary.REL_LAST_MODIFIED_BY;
 import static archive.fedora.Vocabulary.REL_LEGACY_ID;
 import static archive.fedora.Vocabulary.REL_NAME;
 import static archive.fedora.Vocabulary.REL_PUBLISH_SCHEME;
+
+import archive.fedora.AddDatastream;
 import helper.HttpArchiveException;
 
 import java.io.BufferedInputStream;
@@ -94,7 +96,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.yourmediashelf.fedora.client.FedoraClientException;
-import com.yourmediashelf.fedora.client.request.AddDatastream;
 import com.yourmediashelf.fedora.client.request.AddRelationship;
 import com.yourmediashelf.fedora.client.request.FindObjects;
 import com.yourmediashelf.fedora.client.request.GetDatastreamDissemination;
@@ -298,9 +299,10 @@ public class Utils {
 			String label = node.getFileLabel();
 			if (label == null || label.isEmpty())
 				label = location.substring(location.lastIndexOf('/'));
-			new AddDatastream(node.getPid(), "data").checksumType("DISABLED")
-					.versionable(true).dsLabel(label).dsState("A").controlGroup("E")
-					.mimeType(node.getMimeType()).dsLocation(location).execute();
+			((AddDatastream) new AddDatastream(node.getPid(), "data")
+					.checksumType("DISABLED").versionable(true).dsLabel(label)
+					.dsState("A").controlGroup("E").mimeType(node.getMimeType())
+					.dsLocation(location)).dsSize(node.getFileSizeAsString()).execute();
 		} catch (FedoraClientException e) {
 			throw new HttpArchiveException(e.getStatus(), e);
 		} catch (Exception e) {
@@ -427,10 +429,11 @@ public class Utils {
 						+ "/data with unmanaged content " + localpath);
 				play.Logger.debug("MimeType: " + node.getMimeType());
 				play.Logger.debug("FileLabel: " + node.getFileLabel());
-				new AddDatastream(node.getPid(), "data").checksumType("DISABLED")
-						.versionable(true).dsState("A").mimeType(node.getMimeType())
-						.dsLabel(node.getFileLabel()).dsLocation(localpath)
-						.controlGroup("E").execute();
+				((AddDatastream) new AddDatastream(node.getPid(), "data")
+						.checksumType("DISABLED").versionable(true).dsState("A")
+						.mimeType(node.getMimeType()).dsLabel(node.getFileLabel())
+						.dsLocation(localpath)).dsSize(node.getFileSizeAsString())
+								.controlGroup("E").execute();
 			}
 		} catch (FedoraClientException e) {
 			throw new HttpArchiveException(e.getStatus(), e);
