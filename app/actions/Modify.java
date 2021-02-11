@@ -178,6 +178,9 @@ public class Modify extends RegalAction {
 	 * @return a short message
 	 */
 	public String updateLobidify2AndEnrichMetadata(String pid, String content) {
+		play.Logger.info(
+				"Beginne updateLobidify2AndEnrichMetadataupdateLobidify2AndEnrichMetadata; Inhalt = "
+						+ content);
 		try {
 			Node node = new Read().readNode(pid);
 			return updateLobidify2AndEnrichMetadata(node, content);
@@ -228,6 +231,7 @@ public class Modify extends RegalAction {
 	 */
 	public String updateLobidify2AndEnrichMetadata(Node node, String content) {
 		play.Logger.info("Starte updateLobidify2AndEnrichMetadata");
+		play.Logger.info("Inhalt = " + content);
 
 		String pid = node.getPid();
 		if (content == null) {
@@ -245,6 +249,7 @@ public class Modify extends RegalAction {
 					lobidUri.replaceFirst("http://lobid.org/resource[s]*/", "");
 			alephid = alephid.replaceAll("#.*", "");
 			content = getLobid2DataAsNtripleString(node, alephid);
+			play.Logger.info("Inhalt nach Lobid2Data = " + content);
 			updateMetadata2(node, content);
 
 			String enrichMessage = Enrich.enrichMetadata2(node);
