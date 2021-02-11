@@ -227,6 +227,7 @@ public class Modify extends RegalAction {
 	 * @return a short message
 	 */
 	public String updateLobidify2AndEnrichMetadata(Node node, String content) {
+		play.Logger.info("Starte updateLobidify2AndEnrichMetadata");
 
 		String pid = node.getPid();
 		if (content == null) {
@@ -270,6 +271,8 @@ public class Modify extends RegalAction {
 
 	public String updateLobidify2AndEnrichMetadataIfRecentlyUpdated(Node node,
 			String content, LocalDate date) {
+		play.Logger
+				.info("Starte updateLobidify2AndEnrichMetadataIfRecentlyUpdated");
 		StringBuffer msg = new StringBuffer();
 		String pid = node.getPid();
 		if (content == null) {
@@ -1022,6 +1025,7 @@ public class Modify extends RegalAction {
 	}
 
 	public String lobidify2(Node node, String alephid) {
+		play.Logger.info("Start lobidify2");
 		updateMetadata2(node, getLobid2DataAsNtripleString(node, alephid));
 		String enrichMessage = Enrich.enrichMetadata2(node);
 		return enrichMessage;

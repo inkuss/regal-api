@@ -987,6 +987,7 @@ public class Resource extends MyController {
 
 	@ApiOperation(produces = "application/json", nickname = "enrichMetadata", value = "enrichMetadata", notes = "Includes linked resources into metadata", response = String.class, httpMethod = "POST")
 	public static Promise<Result> enrichMetadata2(@PathParam("pid") String pid) {
+		play.Logger.info("Starte enrichMetadata2");
 		return new ModifyAction().call(pid, userId -> {
 			Node node = readNodeOrNull(pid);
 			String result = Enrich.enrichMetadata2(node);

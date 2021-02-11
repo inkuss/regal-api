@@ -52,6 +52,7 @@ public class Enrich {
 			"http://www.w3.org/2004/02/skos/core#prefLabel";
 
 	public static String enrichMetadata2(Node node) {
+		play.Logger.info("Starte enrichMetadata2");
 		try {
 			play.Logger.info("Enrich 2 " + node.getPid());
 			String metadata = node.getMetadata2();
@@ -62,6 +63,9 @@ public class Enrich {
 			List<Statement> enrichStatements = new ArrayList<>();
 			enrichAll(node, metadata, enrichStatements);
 			metadata = RdfUtils.replaceTriples(enrichStatements, metadata);
+			play.Logger.info(
+					"Nach Ersetzung der Tripletts wird jetz als metadata2 am Node gespeichert: "
+							+ metadata);
 			new Modify().updateMetadata2(node, metadata);
 		} catch (Exception e) {
 			play.Logger.debug("", e);
@@ -178,6 +182,7 @@ public class Enrich {
 	private static Statement getLabelStatement(String uri) {
 		play.Logger.info("Hole Etiketten-Aussage für URI: " + uri);
 		String prefLabel = MyEtikettMaker.getLabelFromEtikettWs(uri);
+		play.Logger.info("bevorzugtes Etikett: " + prefLabel);
 		ValueFactory v = RdfUtils.valueFactory;
 		Statement newS = v.createStatement(v.createIRI(uri),
 				v.createIRI(PREF_LABEL),
@@ -186,6 +191,7 @@ public class Enrich {
 	}
 
 	private static List<String> findAllUris(String metadata) {
+		play.Logger.info("Finde alle URIs in metadata: " + metadata);
 		HashMap<String, String> result = new HashMap<>();
 		try (
 				RepositoryConnection con = RdfUtils.readRdfInputStreamToRepository(
@@ -197,6 +203,7 @@ public class Enrich {
 				Value o = st.getObject();
 				if (o instanceof IRI) {
 					String objectUri = o.stringValue();
+					play.Logger.info("Gefunden: objectUri: " + objectUri);
 					result.put(objectUri, objectUri);
 				}
 			}
