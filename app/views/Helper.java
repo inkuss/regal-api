@@ -174,20 +174,25 @@ public class Helper {
 		JsonNode hit = new ObjectMapper().valueToTree(h);
 		for (JsonNode c : hit.at("/subject")) {
 			if (c.has("componentList")) {
+				play.Logger.debug("c has componentList");
 				result1.add(getComponentList(c));
 			} else {
 				String label = c.at("/label").asText();
+				play.Logger.debug("Label: " + label);
 				if (label != null && !label.isEmpty()) {
 					String uri = c.at("/@id").asText();
 					if (uri.contains("rpb#nr")) {
 						/**
 						 * Schlagworte mit diesem prefix kommen nicht zur Anzeige
 						 */
+						play.Logger.debug("rpb#nr");
 						continue;
 					}
 					String sourceId = c.at("/source/0/@id").asText();
 					String source = c.at("/source/0/label").asText();
 					String notation = c.at("/notation").asText();
+					play.Logger.debug("sourceId: " + sourceId + "; source: " + source
+							+ "; notation: " + notation);
 
 					if (uri == null || uri.isEmpty()) {
 						/**
@@ -195,6 +200,7 @@ public class Helper {
 						 * werden. Der Suchstring wird unter
 						 * views/tags/resourceView#displaySubject gebildet.
 						 */
+						play.Logger.debug("uri is empty");
 						uri = label;
 					}
 					Map<String, Object> subject = new HashMap<>();
@@ -202,7 +208,11 @@ public class Helper {
 					subject.put("label", label);
 					subject.put("source", source);
 					subject.put("sourceId", sourceId);
+					play.Logger.debug("id: " + uri + "; label: " + label + "; source: "
+							+ source + "; sourceId: " + sourceId);
 					subject.put("sourceName", getSubjectSource(sourceId, uri, notation));
+					play.Logger.debug(
+							"sourceName: " + getSubjectSource(sourceId, uri, notation));
 					result2.add(subject);
 				}
 			}
@@ -213,13 +223,18 @@ public class Helper {
 						.compareTo(b.get("sourceName").toString()))
 				.collect(Collectors.toList()));
 		if (result1.isEmpty()) {
+			play.Logger.debug("result1 ist leer");
 			for (JsonNode c : hit.at("/subject")) {
 
 				String notation = c.at("/notation").asText();
 				String name = c.at("/prefLabel").asText();
 				String uri = c.at("/@id").asText();
-				if (uri.contains("rpb#nr"))
+				play.Logger.debug(
+						"name: " + name + "; uri: " + uri + "; notation: " + notation);
+				if (uri.contains("rpb#nr")) {
+					play.Logger.debug("rpb#nr");
 					continue;
+				}
 				String sourceId = uri;
 				String source = "";
 
@@ -228,7 +243,11 @@ public class Helper {
 				subject.put("label", name);
 				subject.put("source", source);
 				subject.put("sourceId", sourceId);
+				play.Logger.debug("id: " + uri + "; label: " + name + "; source: "
+						+ source + "; sourceId: " + sourceId);
 				subject.put("sourceName", getSubjectSource(sourceId, uri, notation));
+				play.Logger
+						.debug("sourceName: " + getSubjectSource(sourceId, uri, notation));
 				result1.add(subject);
 			}
 		}
