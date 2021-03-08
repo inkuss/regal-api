@@ -244,13 +244,13 @@ public class Helper {
 			source = "lbz " + getLbzId(uri);
 		} else if ("https://w3id.org/lobid/rpb".equals(sourceId)) {
 			source = "rpb " + getRPbId(uri);
-		} else if ("http://d-nb.info/gnd/4149423-4".equals(sourceId)) {
+		} else if ("https://d-nb.info/gnd/4149423-4".equals(sourceId)) {
 			if (notation != null && !notation.isEmpty()) {
 				source = "ddc " + notation;
 			} else {
 				source = "ddc " + getDdcId(uri);
 			}
-		} else if ("http://d-nb.info/gnd/7749153-1".equals(sourceId)
+		} else if ("https://d-nb.info/gnd/7749153-1".equals(sourceId)
 				|| uri.startsWith("http://d-nb.info/gnd/")
 				|| uri.startsWith("https://d-nb.info/gnd/")) {
 			source = "gnd " + getGndId(uri);
