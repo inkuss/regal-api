@@ -150,6 +150,7 @@ public class Helper {
 		List<Map<String, Object>> result = new ArrayList<>();
 		JsonNode hit = new ObjectMapper().valueToTree(h);
 		for (JsonNode c : hit.at("/contribution")) {
+			play.Logger.debug("/contribution =" + c.asText());
 			String name = c.at("/agent/0/label").asText();
 			String role = c.at("/role/0/label").asText();
 			String roleUri = c.at("/role/0/@id").asText();
