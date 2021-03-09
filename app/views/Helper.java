@@ -234,34 +234,41 @@ public class Helper {
 		return result1;
 	}
 
+	/**
+	 * Holt die Verschlagwortung als Zeichenkette: Bezeichner + Notation. Z.B.
+	 * "lbz 130", "ddc 780" oder "rpb 826000"
+	 * 
+	 * @param sourceId Die URI zum Schlagwortbezeichner, z.B.
+	 *          https://w3id.org/lobid/rpb für die Rheinland-Pfälzische
+	 *          Bibliographie
+	 * @param uri Die URI für dieses Schlagwort
+	 * @param notation Die Notation für dieses Schlagwort, falls bekannt
+	 * @return Die Verschlagwortung als Zeichenkette
+	 */
 	public static String getSubjectSource(String sourceId, String uri,
 			String notation) {
 		String source = "";
 		if (uri == null) {
 			return "";
 		}
-		if ("https://w3id.org/lobid/rpb2".equals(sourceId)) {
+		if (sourceId.endsWith("//w3id.org/lobid/rpb2")) {
 			source = "lbz " + getLbzId(uri);
-		} else if ("https://w3id.org/lobid/rpb".equals(sourceId)) {
+		} else if (sourceId.endsWith("//w3id.org/lobid/rpb")) {
 			source = "rpb " + getRPbId(uri);
-		} else if ("http://d-nb.info/gnd/4149423-4".equals(sourceId)
-				|| "https://d-nb.info/gnd/4149423-4".equals(sourceId)) {
+		} else if (sourceId.endsWith("//d-nb.info/gnd/4149423-4")) {
 			if (notation != null && !notation.isEmpty()) {
 				source = "ddc " + notation;
 			} else {
 				source = "ddc " + getDdcId(uri);
 			}
-		} else if ("http://d-nb.info/gnd/7749153-1".equals(sourceId)
-				|| "https://d-nb.info/gnd/7749153-1".equals(sourceId)
-				|| uri.startsWith("http://d-nb.info/gnd/")
-				|| uri.startsWith("https://d-nb.info/gnd/")) {
+		} else if (sourceId.endsWith("//d-nb.info/gnd/7749153-1")
+				|| (uri.indexOf("//d-nb.info/gnd/") >= 0)) {
 			source = "gnd " + getGndId(uri);
-		} else if ("http://purl.org/lobid/nwbib".equals(sourceId)) {
+		} else if (sourceId.endsWith("//purl.org/lobid/nwbib")) {
 			source = "nwbib " + getNwbibId(uri);
 		} else if (uri.startsWith(Globals.protocol + Globals.server + "/adhoc")) {
 			source = "lokal";
-		} else if (uri.startsWith("http://aims.fao.org/aos/agrovoc")
-				|| uri.startsWith("https://aims.fao.org/aos/agrovoc")) {
+		} else if (uri.indexOf("//aims.fao.org/aos/agrovoc") >= 0) {
 			source = "agrovoc";
 		}
 		return source;
