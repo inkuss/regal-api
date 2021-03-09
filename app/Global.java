@@ -149,7 +149,7 @@ public class Global extends GlobalSettings {
 
 	private String getDate() {
 		SimpleDateFormat simpleDateFormat =
-				new SimpleDateFormat("dd/mm/yyyy:hh:mm:ss +SSS");
+				new SimpleDateFormat("dd/MM/yyyy:HH:mm:ss +SSS");
 		return simpleDateFormat.format(new Date());
 	}
 
