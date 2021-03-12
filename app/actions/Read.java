@@ -117,17 +117,23 @@ public class Read extends RegalAction {
 	 * @return node
 	 */
 	public Node getLastModifiedChildOrNull(Node node, String contentType) {
+		play.Logger.debug("BEGIN getLastModifiedChildOrNull for pidi: "
+				+ node.getPid() + "; contentType: " + contentType);
 		if (contentType == null || contentType.isEmpty()) {
 			return null;
 		}
 		Node oldestNode = null;
 		for (Node n : getParts(node)) {
+			play.Logger.debug("found child with pid: " + n.getPid()
+					+ "; contentType: " + n.getContentType());
 			if (contentType.equals(n.getContentType())) {
 				oldestNode = compareDates(n, oldestNode);
+				play.Logger.debug("oldest node is now: pid: " + oldestNode.getPid());
 			}
 		}
 		if (oldestNode == null)
 			return null;
+		play.Logger.debug("returning oldest node with pid: " + oldestNode.getPid());
 		return oldestNode;
 
 	}
