@@ -125,9 +125,9 @@ public class Index {
 		String pid = n.getPid();
 		String type = n.getContentType();
 		StringBuffer msg = new StringBuffer();
-		// msg.append(indexToPrivateIndex(pid, type, namespace, n));
-		// msg.append(handlePublicIndex(pid, type, namespace, n));
-		// msg.append(handleFulltextIndex(pid, type, namespace, n));
+		msg.append(indexToPrivateIndex(pid, type, namespace, n));
+		msg.append(handlePublicIndex(pid, type, namespace, n));
+		msg.append(handleFulltextIndex(pid, type, namespace, n));
 		msg.append(handlePublicFulltextIndex(pid, type, namespace, n));
 		return msg.toString();
 	}
@@ -155,7 +155,7 @@ public class Index {
 				msg.append(indexMetadataToPublicFulltextIndex(pid, type, namespace, n));
 			else
 				msg.append("Content of type " + type + " for pid " + pid
-						+ " not indexed in public fulltext index!\n");
+						+ " not indexed as metadata in public fulltext index!\n");
 		} else {
 			msg.append(removeFromPublicFulltextIndex(pid, type, namespace));
 		}
@@ -167,7 +167,7 @@ public class Index {
 				msg.append(indexFulltextToPublicFulltextIndex(pid, type, namespace, n));
 			else
 				msg.append("Content of type " + type + " for pid " + pid
-						+ " not indexed in public fulltext index!\n");
+						+ " not indexed as fulltext in public fulltext index!\n");
 		} else {
 			msg.append(removeFromPublicFulltextIndex(pid, type, namespace));
 		}
