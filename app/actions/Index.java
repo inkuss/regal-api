@@ -151,9 +151,10 @@ public class Index {
 					|| "journal".equals(n.getContentType())
 					|| "webpage".equals(n.getContentType())
 					|| "article".equals(n.getContentType())
-					|| "researchData".equals(n.getContentType()))
+					|| "researchData".equals(n.getContentType())) {
 				msg.append(indexMetadataToPublicFulltextIndex(pid, type, namespace, n));
-			else
+				return msg.toString();
+			} else
 				msg.append("Content of type " + type + " for pid " + pid
 						+ " not indexed as metadata in public fulltext index!\n");
 		} else {
