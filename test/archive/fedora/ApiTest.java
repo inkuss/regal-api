@@ -16,7 +16,7 @@
  */
 package archive.fedora;
 
-import models.RegalObject;
+import models.ToScienceObject;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -43,7 +43,7 @@ public class ApiTest extends BaseModelTest {
 	@Test
 	public void objectLifeCycle() {
 		String pid = "test:1234567";
-		RegalObject object = new RegalObject();
+		ToScienceObject object = new ToScienceObject();
 		object.setContentType("monograph");
 		createObject(pid, object, 200);
 		readObject(pid, 200);
@@ -54,12 +54,12 @@ public class ApiTest extends BaseModelTest {
 	@Test
 	public void addParent() {
 		String pid = "test:1234567";
-		RegalObject object = new RegalObject();
+		ToScienceObject object = new ToScienceObject();
 		object.setContentType("monograph");
 		object.setParentPid("test:1234568");
 
 		String parentPid = "test:1234568";
-		RegalObject parentObject = new RegalObject();
+		ToScienceObject parentObject = new ToScienceObject();
 		parentObject.setContentType("monograph");
 
 		createObject(parentPid, parentObject, 200);
@@ -75,12 +75,12 @@ public class ApiTest extends BaseModelTest {
 	@Test
 	public void deleteHierarchy() {
 		String pid = "test:1234567";
-		RegalObject object = new RegalObject();
+		ToScienceObject object = new ToScienceObject();
 		object.setContentType("monograph");
 		object.setParentPid("test:1234568");
 
 		String parentPid = "test:1234568";
-		RegalObject parentObject = new RegalObject();
+		ToScienceObject parentObject = new ToScienceObject();
 		object.setContentType("monograph");
 
 		createObject(parentPid, parentObject, 200);
@@ -104,7 +104,7 @@ public class ApiTest extends BaseModelTest {
 		return result;
 	}
 
-	private Result createObject(String pid, RegalObject object, int httpStatus) {
+	private Result createObject(String pid, ToScienceObject object, int httpStatus) {
 		JsonNode body = JsonUtil.mapper().convertValue(object, JsonNode.class);
 		Result result = controllerCall(() -> Resource.updateResource(pid), body);
 		Assert.assertEquals(httpStatus, result.status());

@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * 
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RegalObject implements java.io.Serializable {
+public class ToScienceObject implements java.io.Serializable {
 
 	/**
 	 * @author jan schnasse
@@ -179,7 +179,7 @@ public class RegalObject implements java.io.Serializable {
 	 * Default constructor
 	 * 
 	 */
-	public RegalObject() {
+	public ToScienceObject() {
 		transformer = new Vector<String>();
 		indexes = new Vector<String>();
 	}
@@ -201,7 +201,7 @@ public class RegalObject implements java.io.Serializable {
 	/**
 	 * @param t a valid type
 	 */
-	public RegalObject(ObjectType t) {
+	public ToScienceObject(ObjectType t) {
 		contentType = t.toString();
 	}
 
@@ -321,9 +321,9 @@ public class RegalObject implements java.io.Serializable {
 	public boolean equals(Object other) {
 		if (this == other)
 			return true;
-		if (!(other instanceof RegalObject))
+		if (!(other instanceof ToScienceObject))
 			return false;
-		RegalObject mt = (RegalObject) other;
+		ToScienceObject mt = (ToScienceObject) other;
 		if (!(parentPid == null ? mt.parentPid == null
 				: parentPid.equals(mt.parentPid)))
 			return false;

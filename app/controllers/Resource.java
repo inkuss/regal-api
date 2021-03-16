@@ -68,7 +68,7 @@ import models.Link;
 import models.MabRecord;
 import models.Message;
 import models.Node;
-import models.RegalObject;
+import models.ToScienceObject;
 import models.UrlHist;
 import play.data.DynamicForm;
 import play.data.Form;
@@ -91,6 +91,11 @@ import views.html.oai.wgl;
 import views.html.tags.getTitle;
 
 /**
+ * In dieser Klasse werden API-Calls (Endpoint-Calls) auf Ressourcen (sub-path
+ * /resource) definiert. Siehe die Definitionen der HTTP-Requests in der
+ * "routes"-Datei, to.science.api/conf/routes.
+ * 
+ * Zur eigentlichen Verarbeitung der Calls wird an andere Klassen übergeben.
  * 
  * @author Jan Schnasse, schnasse@hbz-nrw.de
  * 
@@ -134,9 +139,8 @@ public class Resource extends MyController {
 		try {
 			if (request().accepts("text/html")) {
 				return htmlList(namespace, contentType, from, until);
-			} else {
-				return jsonList(namespace, contentType, from, until);
 			}
+			return jsonList(namespace, contentType, from, until);
 		} catch (HttpArchiveException e) {
 			return Promise.promise(new Function0<Result>() {
 				public Result apply() {
@@ -285,11 +289,12 @@ public class Resource extends MyController {
 	@ApiOperation(produces = "application/octet-stream", nickname = "listData", value = "listData", notes = "Shows Data of a resource", response = play.mvc.Result.class, httpMethod = "GET")
 	public static Promise<Result> listData(@PathParam("pid") String pid) {
 		return new ReadDataAction().call(pid, node -> {
+			HttpURLConnection connection = null;
 			try {
 				response().setHeader("Access-Control-Allow-Origin", "*");
 				URL url = new URL(Globals.fedoraIntern + "/objects/" + pid
 						+ "/datastreams/data/content");
-				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+				connection = (HttpURLConnection) url.openConnection();
 				response().setContentType(connection.getContentType());
 				response().setHeader("Content-Disposition",
 						"inline;filename=\"" + node.getFileLabel() + "\"");
@@ -321,7 +326,7 @@ public class Resource extends MyController {
 				play.Logger.debug("Patching Pid: " + pid);
 				String result = "";
 				Node node = readNodeOrNull(pid);
-				RegalObject object = getRegalObject(request().body().asJson());
+				ToScienceObject object = getRegalObject(request().body().asJson());
 				Node newNode = create.patchResource(node, object);
 				result = newNode.getLastModifyMessage();
 				result = result.concat(" " + newNode.getPid() + " created/updated!");
@@ -339,7 +344,7 @@ public class Resource extends MyController {
 			@ApiImplicitParam(value = "RegalObject wich specifies a values that must be modified in the resource and it's childs", required = true, dataType = "RegalObject", paramType = "body") })
 	public static Promise<Result> patchResources(@PathParam("pid") String pid) {
 		return new BulkActionAccessor().call((userId) -> {
-			RegalObject object = getRegalObject(request().body().asJson());
+			ToScienceObject object = getRegalObject(request().body().asJson());
 			List<Node> list = Globals.fedora.listComplexObject(pid);
 			list.removeIf(n -> "D".equals(n.getState()));
 			BulkAction bulk = new BulkAction();
@@ -359,7 +364,7 @@ public class Resource extends MyController {
 			play.Logger.debug("Updating Pid: " + pid);
 			String result = "";
 			Node node = readNodeOrNull(pid);
-			RegalObject object = getRegalObject(request().body().asJson());
+			ToScienceObject object = getRegalObject(request().body().asJson());
 			Node newNode = null;
 			if (node == null) {
 				String[] namespacePlusId = pid.split(":");
@@ -381,7 +386,7 @@ public class Resource extends MyController {
 	public static Promise<Result> createResource(
 			@PathParam("namespace") String namespace) {
 		return new CreateAction().call((userId) -> {
-			RegalObject object = getRegalObject(request().body().asJson());
+			ToScienceObject object = getRegalObject(request().body().asJson());
 			if (object.getContentType().equals("webpage")) {
 				object.setAccessScheme("restricted");
 			}
@@ -392,18 +397,17 @@ public class Resource extends MyController {
 		});
 	}
 
-	private static RegalObject getRegalObject(JsonNode json) {
+	private static ToScienceObject getRegalObject(JsonNode json) {
 		try {
-			RegalObject object;
+			ToScienceObject object;
 			play.Logger.debug("Json Body: " + json);
 			if (json != null) {
-				object = (RegalObject) MyController.mapper.readValue(json.toString(),
-						RegalObject.class);
+				object = MyController.mapper.readValue(json.toString(),
+						ToScienceObject.class);
 				return object;
-			} else {
-				throw new NullPointerException(
-						"Please PUT at least a type, e.g. {\"type\":\"monograph\"}");
 			}
+			throw new NullPointerException(
+					"Please PUT at least a type, e.g. {\"type\":\"monograph\"}");
 		} catch (JsonMappingException e) {
 			throw new HttpArchiveException(500, e);
 		} catch (JsonParseException e) {
@@ -488,7 +492,7 @@ public class Resource extends MyController {
 				Object o = request().body().asJson();
 				DublinCoreData dc;
 				if (o != null) {
-					dc = (DublinCoreData) MyController.mapper.readValue(o.toString(),
+					dc = MyController.mapper.readValue(o.toString(),
 							DublinCoreData.class);
 				} else {
 					dc = new DublinCoreData();
@@ -546,10 +550,9 @@ public class Resource extends MyController {
 			if (field != null && !field.isEmpty()) {
 				String result = delete.deleteMetadataField(pid, field);
 				return JsonMessage(new Message(result));
-			} else {
-				String result = delete.deleteMetadata(pid);
-				return JsonMessage(new Message(result));
 			}
+			String result = delete.deleteMetadata(pid);
+			return JsonMessage(new Message(result));
 		});
 	}
 
@@ -560,10 +563,9 @@ public class Resource extends MyController {
 			if (field != null && !field.isEmpty()) {
 				String result = delete.deleteMetadata2Field(pid, field);
 				return JsonMessage(new Message(result));
-			} else {
-				String result = delete.deleteMetadata2(pid);
-				return JsonMessage(new Message(result));
 			}
+			String result = delete.deleteMetadata2(pid);
+			return JsonMessage(new Message(result));
 		});
 	}
 
@@ -613,9 +615,8 @@ public class Resource extends MyController {
 
 				if (request().accepts("text/html")) {
 					return ok(resources.render(result));
-				} else {
-					return getJsonResult(result);
 				}
+				return getJsonResult(result);
 			} catch (Exception e) {
 				return JsonMessage(new Message(e, 500));
 			}
@@ -647,10 +648,8 @@ public class Resource extends MyController {
 				}
 				if (request().accepts("text/csv")) {
 					return getCsvResults(new ObjectMapper().valueToTree(hitMap));
-				} else {
-
-					return getJsonResult(hitMap);
 				}
+				return getJsonResult(hitMap);
 			} catch (Exception e) {
 				return JsonMessage(new Message(e, 500));
 			}
@@ -1058,9 +1057,8 @@ public class Resource extends MyController {
 				if (request().accepts("text/html")) {
 					response().setHeader("Content-Type", "text/html; charset=utf-8");
 					return ok(resource.render(result, null));
-				} else {
-					return getJsonResult(result.getLd2());
 				}
+				return getJsonResult(result.getLd2());
 			} catch (Exception e) {
 				return JsonMessage(new Message(e, 500));
 			}
@@ -1075,8 +1073,7 @@ public class Resource extends MyController {
 				Gatherconf conf = null;
 				if (o != null) {
 					play.Logger.debug("o.toString=" + o.toString());
-					conf = (Gatherconf) MyController.mapper.readValue(o.toString(),
-							Gatherconf.class);
+					conf = MyController.mapper.readValue(o.toString(), Gatherconf.class);
 					// hier die neue conf auch im JobDir von Heritrix ablegen
 					conf.setName(pid);
 					conf.setRobotsPolicy(RobotsPolicy.ignore);
@@ -1163,6 +1160,23 @@ public class Resource extends MyController {
 		});
 	}
 
+	/**
+	 * Dieser Endpunkt fügt eine Forschungsdaten-Ressource (Datei) zu einem
+	 * Forschungsdatenobjekt hinzu.
+	 */
+	public static Promise<Result> createResearchData(@PathParam("pid") String pid,
+			@QueryParam("collectionUrl") String collectionUrl,
+			@QueryParam("subPath") String subPath,
+			@QueryParam("filename") String filename,
+			@QueryParam("resourcePid") String resourcePid) {
+		return new ModifyAction().call(pid, userId -> {
+			Node node = readNodeOrNull(pid);
+			Node result = create.createResearchData(node, collectionUrl, subPath,
+					filename, resourcePid);
+			return getJsonResult(result);
+		});
+	}
+
 	@ApiOperation(produces = "application/json", nickname = "linkVersion", value = "linkVersion", response = Result.class, httpMethod = "POST")
 	public static Promise<Result> linkVersion(@PathParam("pid") String pid) {
 		return new ModifyAction().call(pid, userId -> {
@@ -1230,9 +1244,8 @@ public class Resource extends MyController {
 				List<Map<String, Object>> stati = read.getStatus(nodes);
 				if (request().accepts("text/html")) {
 					return htmlStatusList(stati);
-				} else {
-					return getJsonResult(stati);
 				}
+				return getJsonResult(stati);
 			} catch (HttpArchiveException e) {
 				return JsonMessage(new Message(e, e.getCode()));
 			} catch (Exception e) {
@@ -1289,15 +1302,13 @@ public class Resource extends MyController {
 				Node node = readNodeOrNull(pid);
 				if ("monograph".equals(node.getContentType())) {
 					return redirect(routes.Forms.getCatalogForm(node.getPid()));
-				} else {
-					String zettelType = node.getContentType();
-					String rdf = RdfUtils.readRdfToString(
-							new ByteArrayInputStream(node.toString().getBytes("utf-8")),
-							RDFFormat.JSONLD, RDFFormat.RDFXML, node.getAggregationUri());
-					// rdf = java.net.URLEncoder.encode(rdf, "utf-8");
-					return ok(
-							edit.render(zettelType, "ntriples", pid, pid + ".rdf", rdf));
 				}
+				String zettelType = node.getContentType();
+				String rdf = RdfUtils.readRdfToString(
+						new ByteArrayInputStream(node.toString().getBytes("utf-8")),
+						RDFFormat.JSONLD, RDFFormat.RDFXML, node.getAggregationUri());
+				// rdf = java.net.URLEncoder.encode(rdf, "utf-8");
+				return ok(edit.render(zettelType, "ntriples", pid, pid + ".rdf", rdf));
 			} catch (Exception e) {
 				return JsonMessage(new Message(json(e)));
 			}
@@ -1323,7 +1334,7 @@ public class Resource extends MyController {
 				String alephId = form.get("alephId");
 				String namespace = form.get("namespace");
 				String pid = form.get("pid");
-				RegalObject object = new RegalObject();
+				ToScienceObject object = new ToScienceObject();
 				object.setContentType("monograph");
 				Node node = null;
 				if (pid != null && !pid.isEmpty()) {

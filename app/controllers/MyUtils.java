@@ -48,7 +48,7 @@ import models.Gatherconf;
 import models.Globals;
 import models.Message;
 import models.Node;
-import models.RegalObject;
+import models.ToScienceObject;
 import play.libs.F.Promise;
 import play.mvc.Result;
 
@@ -265,7 +265,7 @@ public class MyUtils extends MyController {
 			int firstId = Integer.parseInt(firstIdStr);
 			list = GatherconfImporter.read(csv, firstId);
 			for (Gatherconf conf : list) {
-				RegalObject object = new RegalObject();
+				ToScienceObject object = new ToScienceObject();
 				object.setContentType("webpage");
 				object.setAccessScheme("public");
 				object.setPublishScheme("public");
