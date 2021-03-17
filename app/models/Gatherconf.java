@@ -39,6 +39,7 @@ import com.wordnik.swagger.core.util.JsonUtil;
 
 import actions.Modify;
 import helper.WebgatherUtils;
+import play.Logger;
 
 /**
  * @author Jan Schnasse
@@ -46,6 +47,9 @@ import helper.WebgatherUtils;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Gatherconf {
+
+	private static final Logger.ALogger WebgatherLogger =
+			Logger.of("webgatherer");
 
 	@SuppressWarnings("javadoc")
 	public enum Interval {
@@ -500,13 +504,17 @@ public class Gatherconf {
 	public boolean hasUrlMoved(Node node)
 			throws URISyntaxException, MalformedURLException, IOException {
 
+		WebgatherLogger.debug("BEGIN method hasUrlMoved for PID " + node.getPid());
 		if (invalidUrl) {
+			WebgatherLogger.debug("URL (" + url + ")is invalid");
 			return true;
 		} // keine erneute Prüfung
 		HttpURLConnection httpConnection = (HttpURLConnection) new URL(
 				WebgatherUtils.convertUnicodeURLToAscii(url)).openConnection();
 		httpConnection.setRequestMethod("GET");
 		httpResponseCode = httpConnection.getResponseCode();
+		WebgatherLogger.debug(
+				"Sent GET to url (" + url + "); Reponse code was: " + httpResponseCode);
 		if (httpResponseCode != 301) {
 			return false;
 		}
@@ -517,6 +525,7 @@ public class Gatherconf {
 				.entrySet()) {
 			if (header.getKey() != null && header.getKey().equals("Location")) {
 				urlNew = header.getValue().get(0);
+				WebgatherLogger.debug("Found new URL: " + urlNew);
 			}
 		}
 		httpConnection.disconnect();
