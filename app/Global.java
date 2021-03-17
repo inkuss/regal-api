@@ -57,7 +57,7 @@ public class Global extends GlobalSettings {
 
 	private static void startInProductionMode() {
 		try {
-			initializeContentModels();
+			// initializeContentModels();
 			initializeSearchIndex();
 			initializeTaskManager();
 			sendMail();
