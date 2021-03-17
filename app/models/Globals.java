@@ -190,6 +190,11 @@ public class Globals {
 	public static final String PUBLIC_INDEX_PREF = "public_";
 
 	/**
+	 * prefix used for public and fulltext es index
+	 */
+	public static final String PUBLIC_FULLTEXT_INDEX_PREF = "publicfulltext_";
+
+	/**
 	 * Global heritrix instance
 	 */
 	public static Heritrix heritrix = new Heritrix();
