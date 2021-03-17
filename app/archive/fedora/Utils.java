@@ -854,6 +854,12 @@ public class Utils {
 			deleteContentModel(m);
 		} catch (FedoraClientException e) {
 			// throw new ContentModelException(e);
+			/**
+			 * falls Content Modell nicht gelöscht werden könnte, nicht weiter machen
+			 * Der "create" würde sonst auf eine Ausnahme laufen
+			 */
+			return;
+
 		}
 		try {
 			createContentModel(m);
