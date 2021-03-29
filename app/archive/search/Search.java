@@ -194,7 +194,7 @@ public class Search {
 
 	SearchResponse query(String[] index, String queryString, int from,
 			int until) {
-		// refresh();
+		refresh();
 		play.Logger.debug("Search for " + queryString);
 		QueryBuilder query = QueryBuilders.queryString(queryString);
 		return query(index, query, from, until);
@@ -309,7 +309,7 @@ public class Search {
 	}
 
 	private void refresh() {
-		client.admin().indices().refresh(new RefreshRequest()).actionGet();
+		// client.admin().indices().refresh(new RefreshRequest()).actionGet();
 	}
 
 	private void initAggregations() {
