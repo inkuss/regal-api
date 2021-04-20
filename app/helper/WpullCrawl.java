@@ -84,6 +84,8 @@ public class WpullCrawl {
 	 */
 	final static String outDir =
 			Play.application().configuration().getString("regal-api.wpull.outDir");
+	final static String privateOutDir = Play.application().configuration()
+			.getString("regal-api.wpull.privateOutDir");
 	final static String crawler =
 			Play.application().configuration().getString("regal-api.wpull.crawler");
 	final static String cdn =
@@ -153,7 +155,13 @@ public class WpullCrawl {
 			this.datetime =
 					date + new SimpleDateFormat("HHmmss").format(new java.util.Date());
 			this.crawlDir = new File(jobDir + "/" + conf.getName() + "/" + datetime);
-			this.resultDir = new File(outDir + "/" + conf.getName() + "/" + datetime);
+			if (node.getAccessScheme().equals("private")) {
+				this.resultDir =
+						new File(privateOutDir + "/" + conf.getName() + "/" + datetime);
+			} else {
+				this.resultDir =
+						new File(outDir + "/" + conf.getName() + "/" + datetime);
+			}
 			this.warcFilename = "WEB-" + host + "-" + date;
 			/*
 			 * Die URI localpath wird von Fedora benötigt, um ein Objekt anlegen zu
@@ -185,8 +193,7 @@ public class WpullCrawl {
 			}
 			if (!resultDir.exists()) {
 				// create output directory
-				WebgatherLogger.debug("Create Output Directory " + outDir + "/"
-						+ conf.getName() + "/" + datetime);
+				WebgatherLogger.debug("Create Output Directory " + resultDir);
 				resultDir.mkdirs();
 			}
 		} catch (Exception e) {
@@ -362,9 +369,13 @@ public class WpullCrawl {
 		sb.append(" --no-directories"); // mandatory to prevent runtime errors
 		sb.append(" --delete-after"); // mandatory for reducing required disc space
 		sb.append(" --convert-links"); // mandatory to rewrite relative urls
-		sb.append(" --no-strong-redirects"); // ohne diesen Parameter wird www.facebook.com, www.youtoube.com uvm. eingesammelt (aktiviert 12.05.2020)
-		sb.append(" --warc-append"); // um CDN-Crawls und Haupt-Crawl im gleichen Archiv zu bündeln
-	        // sb.append(" --warc-tempdir=" + tempJobDir); auskommentiert 27.08.2020 für EDOZWO-1026
+		/**
+		 * Ohne den Parameter --no-strong-redirects wird www.facebook.com,
+		 * www.youtoube.com uvm. eingesammelt (aktiviert 12.05.2020)
+		 */
+		sb.append(" --no-strong-redirects");
+		sb.append(" --warc-append"); // um CDN-Crawls und Haupt-Crawl im gleichen
+																	// Archiv zu bündeln
 		sb.append(" --warc-move=" + resultDir);
 		return sb.toString();
 	}

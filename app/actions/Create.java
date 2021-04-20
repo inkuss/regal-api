@@ -363,7 +363,10 @@ public class Create extends RegalAction {
 			WebgatherLogger.info("localDir=" + outDir.getAbsolutePath());
 
 			String waybackCollectionLink = null;
-			if (n.getAccessScheme().equals("public")) {
+			if (n.getAccessScheme().contentEquals("private")) {
+				waybackCollectionLink = Play.application().configuration()
+						.getString("regal-api.wayback.privatLink");
+			} else if (n.getAccessScheme().equals("public")) {
 				waybackCollectionLink = Play.application().configuration()
 						.getString("regal-api.wayback.weltweitLink");
 			} else {
