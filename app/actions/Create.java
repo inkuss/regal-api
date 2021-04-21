@@ -105,11 +105,17 @@ public class Create extends RegalAction {
 	 */
 	public Node patchResource(Node node, ToScienceObject object) {
 		play.Logger.debug("Patching Node with Pid " + node.getPid());
-		new Index().remove(node);
-		setNodeMembers(node, object);
-		WebsiteVersionPublisher wvp = new WebsiteVersionPublisher();
-		node.setLastModifyMessage(wvp.handleWebpagePublishing(node, object));
-		return updateResource(node);
+		try {
+			new Index().remove(node);
+			setNodeMembers(node, object);
+			WebsiteVersionPublisher wvp = new WebsiteVersionPublisher();
+			node.setLastModifyMessage(wvp.handleWebpagePublishing(node, object));
+			return updateResource(node);
+		} catch (Exception e) {
+			play.Logger.error("", e);
+			WebgatherLogger.error(e.toString());
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**

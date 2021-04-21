@@ -84,7 +84,8 @@ public class WebsiteVersionPublisher {
 			return "";
 		} catch (Exception e) {
 			play.Logger.error("", e);
-			return e.toString();
+			WebgatherLogger.error(e.toString());
+			throw new RuntimeException(e);
 		}
 	}
 
