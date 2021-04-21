@@ -19,7 +19,7 @@ package helper;
 import java.io.File;
 import java.nio.file.Files;
 
-import actions.Modify;
+// import actions.Modify;
 import actions.Modify.UpdateNodeException;
 import archive.fedora.CopyUtils;
 import models.Gatherconf;
@@ -498,10 +498,13 @@ public class WebsiteVersionPublisher {
 					publicOpenWaybackLink.replace("/lesesaal/", "/weltweit/");
 			conf.setOpenWaybackLink(publicOpenWaybackLink);
 			play.Logger.debug("publicOpenWaybackLink=" + publicOpenWaybackLink);
-			String msg = new Modify().updateConf(node, conf.toString());
+			node.setConf(conf.toString());
+			// in dieser Klasse noch nichts modifizieren, sondern nur setzen
+			// Modifizieren geschieht dann in Create.patchResource()
+			// msg = new Modify().updateConf(node, conf.toString());
 			WebgatherLogger.info(
 					"Openwayback-Link wurde auf \"weltweit\" gesetzt für Webschnitt "
-							+ node.getPid() + ". Modify-Message: " + msg);
+							+ node.getPid());
 		} catch (Exception e) {
 			WebgatherLogger.error("Openwayback-Link für Webschnitt " + node.getPid()
 					+ " kann nicht auf \"öffentlich\" gesetzt werden!");
@@ -560,10 +563,11 @@ public class WebsiteVersionPublisher {
 			conf.setOpenWaybackLink(restrictedOpenWaybackLink);
 			play.Logger
 					.debug("restrictedOpenWaybackLink=" + restrictedOpenWaybackLink);
-			msg = new Modify().updateConf(node, conf.toString());
+			node.setConf(conf.toString());
+			// msg = new Modify().updateConf(node, conf.toString());
 			WebgatherLogger.info(
 					"Openwayback-Link wurde auf \"lesesaal|wayback\" gesetzt für Webschnitt "
-							+ node.getPid() + ". Modify-Message: " + msg);
+							+ node.getPid());
 		} catch (UpdateNodeException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
@@ -592,10 +596,11 @@ public class WebsiteVersionPublisher {
 					Globals.webharvestsDataUrl + "/" + versionDir + "/webschnitt.xml";
 			WebgatherLogger.info("Neuer Openwayback-Link: " + publicOpenWaybackLink);
 			conf.setOpenWaybackLink(publicOpenWaybackLink);
-			String msg = new Modify().updateConf(node, conf.toString());
+			node.setConf(conf.toString());
+			// msg = new Modify().updateConf(node, conf.toString());
 			WebgatherLogger.info(
 					"localDir und Openwayback-Link wurde auf öffentlich gesetzt für Webschnitt "
-							+ node.getPid() + ". Modify-Message: " + msg);
+							+ node.getPid());
 		} catch (UpdateNodeException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
@@ -625,10 +630,11 @@ public class WebsiteVersionPublisher {
 			WebgatherLogger
 					.info("Neuer Openwayback-Link: " + restrictedOpenWaybackLink);
 			conf.setOpenWaybackLink(restrictedOpenWaybackLink);
-			String msg = new Modify().updateConf(node, conf.toString());
+			node.setConf(conf.toString());
+			// msg = new Modify().updateConf(node, conf.toString());
 			WebgatherLogger.info(
 					"localDir und Openwayback-Link wurde auf zugriffbeschränkt gesetzt für Webschnitt "
-							+ node.getPid() + ". Modify-Message: " + msg);
+							+ node.getPid());
 		} catch (UpdateNodeException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
