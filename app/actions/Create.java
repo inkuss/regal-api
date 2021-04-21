@@ -181,8 +181,11 @@ public class Create extends RegalAction {
 	private void setNodeMembers(Node node, ToScienceObject object) {
 		if (object.getContentType() != null)
 			setNodeType(object.getContentType(), node);
+		WebgatherLogger.debug("object access scheme: " + object.getAccessScheme());
 		if (object.getAccessScheme() != null)
 			node.setAccessScheme(object.getAccessScheme());
+		WebgatherLogger
+				.debug("object publish scheme: " + object.getPublishScheme());
 		if (object.getPublishScheme() != null)
 			node.setPublishScheme(object.getPublishScheme());
 		if (object.getParentPid() != null)
