@@ -52,49 +52,64 @@ public class WebsiteVersionPublisher {
 	private static String msg = null;
 
 	/**
-	 * Veröffentlicht und De-Publiziert Webschnitte
+	 * Veröffentlicht und De-Publiziert Webschnitte. Setzt eine Textnachricht über
+	 * die ausgeführten Aktionen in node.lastModifyMessage. Diese Textnachricht
+	 * wird dem Endanwender auf dem UI angezeigt (sie kann leer sein).
 	 * 
 	 * @param node Der Knoten (Klasse models.Node) einer zu patchenden Ressource
 	 * @param object Das Regal-Objekt einer zu patchenden Ressource
-	 * @return eine Textnachricht über die hier ausgeführten Aktionen
+	 * @return true: Alles OK. Die neuen Zugriffsrechte (und andere Änderungen)
+	 *         können übernommen werden. false: Die Methode lief auf Fehler. Die
+	 *         Änderunen sollen nicht in die Ressource übernommen werden.
 	 */
-	public String handleWebpagePublishing(Node node, ToScienceObject object) {
+	public boolean handleWebpagePublishing(Node node, ToScienceObject object) {
 		try {
 			if ((object == null) || (object.getAccessScheme() == null)) {
-				play.Logger.warn("Zugriffsrecht für ID " + node.getPid()
-						+ " kann nicht ermittelt werden!");
-				return "";
+				msg = "Zugriffsrecht für ID " + node.getPid()
+						+ " kann nicht ermittelt werden!";
+				play.Logger.warn(msg);
+				node.setLastModifyMessage(msg);
+				return false;
 			}
 			if (object.getAccessScheme().equals("public")) {
 				if (node.getContentType().equals("version")) {
 					publishWebpageVersion(node);
-					return "Webschnitt ist veröffentlicht. Das Indexieren des Webschnitts in der OpenWayback-Maschine kann mehrere Minuten dauern.";
+					node.setLastModifyMessage(
+							"Webschnitt ist veröffentlicht. Das Indexieren des Webschnitts in der OpenWayback-Maschine kann mehrere Minuten dauern.");
+					return true;
 				} else if (node.getContentType().equals("webpage")) {
-					return "Webpage ist veröffentlicht.";
+					node.setLastModifyMessage("Webpage ist veröffentlicht.");
+					return true;
 				}
 			}
 
 			if (object.getAccessScheme().equals("restricted")) {
 				if (node.getContentType().equals("version")) {
 					retreatWebpageVersion(node);
-					return "Webschnitt ist auf zugriffsbeschränkt (Lesesaal) gesetzt.";
+					node.setLastModifyMessage(
+							"Webschnitt ist auf zugriffsbeschränkt (Lesesaal) gesetzt.");
+					return true;
 				} else if (node.getContentType().equals("webpage")) {
-					return "Webpage ist nur im Lesesaal zugänglich.";
+					node.setLastModifyMessage("Webpage ist nur im Lesesaal zugänglich.");
+					return true;
 				}
 			}
 
 			if (node.getContentType().equals("version")) {
-				throw new RuntimeException(
+				node.setLastModifyMessage(
 						"Webschnitt kann nicht auf Zugriffsrecht Daten \""
 								+ object.getAccessScheme()
 								+ "\" gesetzt werden (nicht implementiert). Ressource wird nicht geändert.");
+				return false;
 			}
 
-			return "";
+			node.setLastModifyMessage("");
+			return true;
 		} catch (Exception e) {
 			play.Logger.error("", e);
 			WebgatherLogger.error(e.toString());
-			throw new RuntimeException(e);
+			node.setLastModifyMessage(msg);
+			return false;
 		}
 	}
 
