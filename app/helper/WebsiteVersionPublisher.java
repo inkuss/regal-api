@@ -74,13 +74,22 @@ public class WebsiteVersionPublisher {
 				}
 			}
 
-			if (object.getAccessScheme().equals("restricted")
-					&& node.getContentType().equals("version")) {
-				retreatWebpageVersion(node);
-				return "Webschnitt ist auf zugriffsbeschränkt (Lesesaal) gesetzt.";
-			} else if (node.getContentType().equals("webpage")) {
-				return "Webpage ist nur im Lesesaal zugänglich.";
+			if (object.getAccessScheme().equals("restricted")) {
+				if (node.getContentType().equals("version")) {
+					retreatWebpageVersion(node);
+					return "Webschnitt ist auf zugriffsbeschränkt (Lesesaal) gesetzt.";
+				} else if (node.getContentType().equals("webpage")) {
+					return "Webpage ist nur im Lesesaal zugänglich.";
+				}
 			}
+
+			if (node.getContentType().equals("version")) {
+				throw new RuntimeException(
+						"Webschnitt kann nicht auf Zugriffsrecht Daten \""
+								+ object.getAccessScheme()
+								+ "\" gesetzt werden (nicht implementiert). Ressource wird nicht geändert.");
+			}
+
 			return "";
 		} catch (Exception e) {
 			play.Logger.error("", e);
