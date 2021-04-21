@@ -911,11 +911,31 @@ public class Modify extends RegalAction {
 	}
 
 	/**
+	 * Updates the Gatherer Configuration of a node
+	 * 
+	 * @param node the Node (a website)
+	 * @param content the Gatherer configuration as string
+	 * @return a message
+	 * @throws HttpArchiveException exception is gatherconf is empty
+	 * @throws UpdateNodeException exception if node cannot be updated
+	 */
+	public String updateConf(Node node, String content)
+			throws HttpArchiveException, UpdateNodeException {
+		return updateConf(node, content, true);
+	}
+
+	/**
+	 * Updates the Gatherer Configuration of a node only does update if doUpdate
+	 * == true. Otherwise just the properties of Node are set, to be updated later
+	 * somewhere else.
+	 * 
 	 * @param node the node to add a conf to
 	 * @param content json representation of conf
+	 * @param doUpdate true: does updates; false: just sets the updated properties
+	 *          in Node
 	 * @return a message
 	 */
-	public String updateConf(Node node, String content) {
+	public String updateConf(Node node, String content, Boolean doUpdate) {
 		try {
 			if (content == null) {
 				throw new HttpArchiveException(406,
@@ -928,9 +948,13 @@ public class Modify extends RegalAction {
 			if (node != null) {
 				node.setConfFile(file.getAbsolutePath());
 				play.Logger.info("Update node" + file.getAbsolutePath());
-				Globals.fedora.updateNode(node);
+				if (doUpdate) {
+					Globals.fedora.updateNode(node);
+				}
 			}
-			updateIndex(node.getPid());
+			if (doUpdate) {
+				updateIndex(node.getPid());
+			}
 			return node.getPid() + " webgatherer conf updated!";
 		} catch (RdfException e) {
 			throw new HttpArchiveException(400, e);
