@@ -66,6 +66,7 @@ public class WpullCrawl {
 	private String warcFilename = null;
 	private String msg = null;
 	private int exitState = 0;
+	private int CDNGathererExitState = 0;
 
 	/**
 	 * Die Schreibzugriffe von wpull (Downloads) erfolgen in das Verzeichnis
@@ -198,9 +199,10 @@ public class WpullCrawl {
 	}
 
 	/**
-	 * Ruft den CDN-Gatherer für diese Website auf
+	 * Ruft den CDN-Gatherer für diese Website auf, anschließend wpull für den
+	 * Hauptcrawl
 	 */
-	public void execCDNGatherer() {
+	public void startJob() {
 		WebgatherLogger.info(
 				"Rufe CDN-Gatherer mit warcFilename=" + this.warcFilename + " auf.");
 		try {
@@ -222,37 +224,8 @@ public class WpullCrawl {
 			log.createNewFile();
 			pb.redirectErrorStream(true);
 			pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
-			Process proc = pb.start();
-			assert pb.redirectInput() == ProcessBuilder.Redirect.PIPE;
-			assert pb.redirectOutput().file() == log;
-			assert proc.getInputStream().read() == -1;
-			WebgatherLogger.info("CDN-Gathering startet successfully !");
-		} catch (Exception e) {
-			WebgatherLogger.error("CDN-Gathering was unsuccessful !", e.toString());
-		}
-	}
-
-	/**
-	 * Starts crawling with wpull
-	 */
-	public void startJob() {
-		try {
-			String executeCommand = buildExecCommand();
-			String[] execArr = executeCommand.split(" ");
-			// unmask spaces in exec command
-			for (int i = 0; i < execArr.length; i++) {
-				execArr[i] = execArr[i].replaceAll("%20", " ");
-			}
-			executeCommand = executeCommand.replaceAll("%20", " ");
-			WebgatherLogger.info("Executing command " + executeCommand);
-			WebgatherLogger.info("Logfile = " + crawlDir.toString() + "/crawl.log");
-			ProcessBuilder pb = new ProcessBuilder(execArr);
-			assert crawlDir.isDirectory();
-			pb.directory(crawlDir);
-			File log = new File(crawlDir.toString() + "/crawl.log");
-			log.createNewFile();
-			pb.redirectErrorStream(true);
-			pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
+			// Bereite Kommando für den Hauptcrawl vor
+			executeCommand = buildExecCommand();
 			WpullThread wpullThread = new WpullThread(pb, 1);
 			wpullThread.setNode(node);
 			wpullThread.setConf(conf);
@@ -260,8 +233,8 @@ public class WpullCrawl {
 			wpullThread.setOutDir(resultDir);
 			wpullThread.setWarcFilename(warcFilename);
 			wpullThread.setLocalPath(localpath);
-			wpullThread.setExecArr(execArr);
-			wpullThread.setLogFile(log);
+			wpullThread.setExecuteCommand(executeCommand);
+			wpullThread.setLogFileCDN(log);
 			wpullThread.start();
 			exitState = wpullThread.getExitState();
 
