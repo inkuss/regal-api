@@ -281,4 +281,21 @@ public class WglMapper {
 		return result.subSequence(0, result.length() - 2).toString();
 	}
 
+	/**
+	 * @param node
+	 * @return
+	 */
+	public static boolean hasWglContributor(Node node) {
+		boolean isWglContributor = false;
+		JsonNode n = new ObjectMapper().valueToTree(node.getLd2());
+		JsonNode institutionArray = n.at("/institution");
+		for (JsonNode item : institutionArray) {
+			String id = item.at("/@id").asText("no Value found");
+			if (Globals.wglContributor.acronymOf(id) != null) {
+				isWglContributor = true;
+			}
+		}
+		return isWglContributor;
+
+	}
 }

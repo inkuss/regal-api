@@ -153,18 +153,15 @@ public class Transform {
 		else if (node.hasUrnInMetadata())
 			urn = node.getUrnFromMetadata();
 		String status = "urn_new";
-		String result =
-				"<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<epicur xmlns=\"urn:nbn:de:1111-2004033116\" xsi:schemaLocation=\"urn:nbn:de:1111-2004033116 http://www.persistent-identifier.de/xepicur/version1.0/xepicur.xsd\">\n"
-						+ "\t<administrative_data>\n" + "\t\t<delivery>\n"
-						+ "\t\t\t<update_status type=\"" + status + "\"></update_status>\n"
-						+ "\t\t\t<transfer type=\"oai\"></transfer>\n" + "\t\t</delivery>\n"
-						+ "\t</administrative_data>\n" + "<record>\n"
-						+ "\t<identifier scheme=\"urn:nbn:de\">" + urn + "</identifier>\n"
-						+ "\t<resource>\n"
-						+ "\t\t<identifier origin=\"original\" role=\"primary\" scheme=\"url\" type=\"frontpage\">"
-						+ url + "</identifier>\n"
-						+ "\t\t<format scheme=\"imt\">text/html</format>\n"
-						+ "\t</resource>" + "</record>\n" + "</epicur> ";
+		String result = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<epicur xmlns=\"urn:nbn:de:1111-2004033116\" xsi:schemaLocation=\"urn:nbn:de:1111-2004033116 http://www.persistent-identifier.de/xepicur/version1.0/xepicur.xsd\">\n"
+				+ "\t<administrative_data>\n" + "\t\t<delivery>\n"
+				+ "\t\t\t<update_status type=\"" + status + "\"></update_status>\n"
+				+ "\t\t</delivery>\n" + "\t</administrative_data>\n" + "<record>\n"
+				+ "\t<identifier scheme=\"urn:nbn:de\">" + urn + "</identifier>\n"
+				+ "\t<resource>\n" + "\t\t<identifier role=\"primary\" scheme=\"url\">"
+				+ url + "</identifier>\n"
+				+ "\t\t<format scheme=\"imt\">text/html</format>\n" + "\t</resource>"
+				+ "</record>\n" + "</epicur> ";
 		return result;
 	}
 

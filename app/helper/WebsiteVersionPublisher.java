@@ -26,7 +26,7 @@ import models.Gatherconf;
 import models.Globals;
 import models.Gatherconf.CrawlerSelection;
 import models.Node;
-import models.RegalObject;
+import models.ToScienceObject;
 import play.Logger;
 import play.Play;
 import com.yourmediashelf.fedora.client.request.GetDatastream;
@@ -58,7 +58,7 @@ public class WebsiteVersionPublisher {
 	 * @param object Das Regal-Objekt einer zu patchenden Ressource
 	 * @return eine Textnachricht über die hier ausgeführten Aktionen
 	 */
-	public String handleWebpagePublishing(Node node, RegalObject object) {
+	public String handleWebpagePublishing(Node node, ToScienceObject object) {
 		try {
 			if ((object == null) || (object.getAccessScheme() == null)) {
 				play.Logger.warn("Zugriffsrecht für ID " + node.getPid()

@@ -319,6 +319,11 @@ public class OaiDispatcher {
 					&& node.getLd2().containsKey("collectionOne")) {
 				node.addTransformer(new Transformer("wgl"));
 			}
+			// Workaround for identifying Leibniz Institutions while lobid doesn't
+			// deliver MAB 078r (see FRL-325)
+			if ("monograph".equals(type) && WglMapper.hasWglContributor(node)) {
+				node.addTransformer(new Transformer("wgl"));
+			}
 		}
 	}
 

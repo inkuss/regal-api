@@ -105,6 +105,39 @@ public class Read extends RegalAction {
 		}
 	}
 
+	/**
+	 * Liefert das zuletzt modifizierte Kind vom Type "contentType". Wie
+	 * getLastModifiedChild, jedoch wir Null zurück gegeben, falls: - der
+	 * Inhaltstyp leer ist, oder - kein Kind von dem gewünschten Inhaltstyp
+	 * gefunden wurde. Die Methode getLastModifiedChild liefert dagegen in diesem
+	 * Falle ein Kind irgendeinen Types bzw. den Knoten selber.
+	 * 
+	 * @param node Der Knoten, dessen Kinder gesucht werden.
+	 * @param contentType der Inhaltstyp, von dem das Kind sein muss.
+	 * @return node
+	 */
+	public Node getLastModifiedChildOrNull(Node node, String contentType) {
+		play.Logger.debug("BEGIN getLastModifiedChildOrNull for pidi: "
+				+ node.getPid() + "; contentType: " + contentType);
+		if (contentType == null || contentType.isEmpty()) {
+			return null;
+		}
+		Node oldestNode = null;
+		for (Node n : getParts(node)) {
+			play.Logger.debug("found child with pid: " + n.getPid()
+					+ "; contentType: " + n.getContentType());
+			if (contentType.equals(n.getContentType())) {
+				oldestNode = compareDates(n, oldestNode);
+				play.Logger.debug("oldest node is now: pid: " + oldestNode.getPid());
+			}
+		}
+		if (oldestNode == null)
+			return null;
+		play.Logger.debug("returning oldest node with pid: " + oldestNode.getPid());
+		return oldestNode;
+
+	}
+
 	private Node compareDates(Node currentNode, Node oldestNode) {
 		Date currentNodeDate = currentNode.getObjectTimestamp();
 		if (currentNodeDate == null)
@@ -748,8 +781,9 @@ public class Read extends RegalAction {
 						.equals(Gatherconf.CrawlerSelection.wpull)) {
 					entries.put("crawlControllerState",
 							WpullCrawl.getCrawlControllerState(node));
-					entries.put("crawlExitStatus", WpullCrawl.getCrawlExitStatus(node) < 0
-							? "" : WpullCrawl.getCrawlExitStatus(node));
+					entries.put("crawlExitStatus",
+							WpullCrawl.getCrawlExitStatus(node) < 0 ? ""
+									: WpullCrawl.getCrawlExitStatus(node));
 				}
 				/*
 				 * Launch Count als Summe der Launches über alle Crawler ermitteln -

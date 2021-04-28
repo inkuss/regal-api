@@ -9,7 +9,7 @@
 	                       @label
 	                       @if(id.toString().startsWith("https://orcid.org")||id.toString().startsWith("http://orcid.org")){
 	                       <a href=@Helper.getLinkAdressOrNull(id.toString())  target="_blank">
-	                               <img class="orcid-pic" src="https://orcid.org/sites/default/files/images/orcid_16x16(1).gif"/>
+	                               <img class="orcid-pic" width="16" height="16" alt="ORCID logo" src="/public/images/ORCID-iD_icon-vector.svg" />
 	                       </a>
 	                       }else{
 	                       <a href=@Helper.getLinkAdressOrNull(id.toString())  target="_blank">
@@ -28,7 +28,7 @@
 	                       @label
 	                       @if(id.startsWith("https://orcid.org")||id.toString().startsWith("http://orcid.org")){
 	                       <a href=@Helper.getLinkAdressOrNull(id)  target="_blank">
-	                               <img class="orcid-pic" src="https://orcid.org/sites/default/files/images/orcid_16x16(1).gif"/>
+	                               <img class="orcid-pic" width="16" height="16" alt="ORCID logo" src="/public/images/ORCID-iD_icon-vector.svg" />
 	                       </a>
 	                       }else{
 	                       <a href=@Helper.getLinkAdressOrNull(id)  target="_blank">
@@ -100,7 +100,13 @@
 					 }
 					 </p>
 					</h2>
-					
+<!--
+<span>Metadaten exportieren:</span>
+<a href="https://@models.Globals.server/resource/@hit.get("@id")%2Ebibtex">BIBTEX</a> |
+<a href="https://@models.Globals.server/resource/@hit.get("@id")%2Eend">ENDNOTE</a> |
+<a href="https://@models.Globals.server/resource/@hit.get("@id")%2Eris">RIS</a> |
+<a href="https://@models.Globals.server/resource/@hit.get("@id")%2Emods">MODS</a>
+-->  
 			</div>
 			
 		</div>

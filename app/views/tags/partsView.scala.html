@@ -37,7 +37,7 @@ case _ =>{ }
 @fileMap.get("hasData") match{ 
 		case hasData : Map[String,Object] =>{
 		
-				<table>
+				<table class="@fileMap.get("publishScheme")" >
 					<tr class="partSummary">
 						<td class="downloadIcon" rowspan="6">
 							<a href="/resource/@fileMap.get("@id")/data"><img

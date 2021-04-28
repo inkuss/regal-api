@@ -1,4 +1,4 @@
-!https://raw.github.com/edoweb/regal/gh-pages/img/logo.png!
+!https://raw.github.com/edoweb/regal/gh-pages/img/to.science.png!
 
 h1. About
 

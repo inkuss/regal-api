@@ -158,7 +158,8 @@ public class MyController extends Controller {
 
 	protected static Result getCsvResults(JsonNode hitMap) {
 		String[] header = new String[] { "id", "title", "contributions", "issued",
-				"contentType", "collectionOne", "created", "doi", "alephId", "url" };
+				"contentType", "collectionOne", "created", "doi", "alephId", "url",
+				"publisherVersion" };
 		try (Writer output = new StringWriter();
 				ICsvMapWriter mapWriter = new org.supercsv.io.CsvMapWriter(output,
 						CsvPreference.EXCEL_PREFERENCE);) {
@@ -183,7 +184,8 @@ public class MyController extends Controller {
 
 	protected static Result getCsvResult(JsonNode hit) {
 		String[] header = new String[] { "id", "title", "contributions", "issued",
-				"contentType", "collectionOne", "created", "doi", "alephId", "url" };
+				"contentType", "collectionOne", "created", "doi", "alephId", "url",
+				"publisherVersion" };
 		try (Writer output = new StringWriter();
 				ICsvMapWriter mapWriter = new org.supercsv.io.CsvMapWriter(output,
 						CsvPreference.EXCEL_PREFERENCE);) {
@@ -217,6 +219,7 @@ public class MyController extends Controller {
 		String doi;
 		String alephId;
 		String url;
+		String publisherVersion;
 		id = hit.at("/@id").asText();
 		title = hit.at("/title/0").asText();
 		contributions = getContributions(hit) + "";
@@ -227,6 +230,7 @@ public class MyController extends Controller {
 		created = hit.at("/isDescribedBy/created").asText();
 		doi = hit.at("/doi").asText();
 		alephId = hit.at("/hbzId/0").asText();
+		publisherVersion = hit.at("/publisherVersion/0/@id").asText();
 		result.put(header[0], id);
 		result.put(header[1], title);
 		result.put(header[2], contributions);
@@ -237,6 +241,7 @@ public class MyController extends Controller {
 		result.put(header[7], doi);
 		result.put(header[8], alephId);
 		result.put(header[9], url);
+		result.put(header[10], publisherVersion);
 		play.Logger.debug("" + result);
 		return result;
 	}

@@ -52,10 +52,11 @@
 }
 
 @createViewerLink(viewerInfo:ViewerInfo)={
-	<a href=@viewerInfo.dataLink><b>Download <i class="fa fa-download"></i></b><br/> @viewerInfo.label @views.Helper.getPrettySize(viewerInfo.filesize+"")</a>
  	@if("public".equals(viewerInfo.accessScheme)){
+	        <a class="public-download" href=@viewerInfo.dataLink><b>Download <i class="fa fa-download"></i></b><br/> @viewerInfo.label @views.Helper.getPrettySize(viewerInfo.filesize+"")</a>
 		<i class="fa fa-unlock" style="color:green;"></i>
  	}else {
+	        <a class="private-download" href=@viewerInfo.dataLink><b>Download <i class="fa fa-download"></i></b><br/> @viewerInfo.label @views.Helper.getPrettySize(viewerInfo.filesize+"")</a>
 		<i class="fa fa-lock" style="color:red;"></i>
 	}
 }
@@ -554,7 +555,7 @@
 	                       </a> <span class="separator">|</span>
 	                       @if(id.startsWith("https://orcid.org")||id.toString().startsWith("http://orcid.org")){
 	                       <a href=@Helper.getLinkAdressOrNull(id)  target="_blank">
-	                               <img class="orcid-pic" src="https://orcid.org/sites/default/files/images/orcid_16x16(1).gif"/>
+	                               <img class="orcid-pic" width="16" height="16" alt="ORCID logo" src="/public/images/ORCID-iD_icon-vector.svg" />
 	                       </a>
 	                       }else{
 	                       <a href=@Helper.getLinkAdressOrNull(id)  target="_blank">

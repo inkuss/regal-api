@@ -160,12 +160,26 @@ public class Webgatherer implements Runnable {
 	}
 
 	/**
+	 * Diese Methode ermittelt das Datum, an dem zuletzt erfolgreich ein
+	 * Webschnitt an die Webpage angehängt wurde.
+	 * 
 	 * @param n der Knoten für die Webpage
-	 * @return Datum+Zeit (Typ Date), als zuletzt ein Crawl angestoßen wurde
+	 * @return Datum+Zeit (Typ Date) des letzten erfolgreich beendeten Webcrwals =
+	 *         Änderungsdatum des neuesten Webschnitts
 	 * @throws Exception Ausnahme beim Lesen
 	 */
 	public static Date getLastLaunch(Node n) throws Exception {
-		return new Read().getLastModifiedChild(n, (Node) null).getLastModified();
+		WebgatherLogger
+				.debug("BEGIN getLastLaunch for node with pid: " + n.getPid());
+		Node lastModifiedChild =
+				new Read().getLastModifiedChildOrNull(n, "version");
+		if (lastModifiedChild == null)
+			return null;
+		WebgatherLogger
+				.debug("lastModifiedChild has pid: " + lastModifiedChild.getPid());
+		WebgatherLogger.debug("lastModifiedChild was last modified on: "
+				+ lastModifiedChild.getLastModified().toString());
+		return lastModifiedChild.getLastModified();
 	}
 
 	/**
@@ -187,6 +201,7 @@ public class Webgatherer implements Runnable {
 	}
 
 	private static boolean isOutstanding(Node n, Gatherconf conf) {
+		WebgatherLogger.debug("BEGIN isOutstanding for pid: " + n.getPid());
 		if (new Date().before(conf.getStartDate()))
 			return false;
 		// Falls ein Crawl noch läuft, gib nie `true` zurück !!
@@ -194,14 +209,20 @@ public class Webgatherer implements Runnable {
 		if (ccs.equals(CrawlControllerState.RUNNING)) {
 			return false;
 		}
+		WebgatherLogger
+				.debug("Nicht vor Beginndatum und Crawl läuft auch noch nicht.");
 		List<Link> parts = n.getRelatives(archive.fedora.FedoraVocabulary.HAS_PART);
 		if (parts == null || parts.isEmpty()) {
+			WebgatherLogger.debug(
+					"Website hat noch keine \"Teile\" und soll jetzt gesammelt werden.");
 			return true;
 		}
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 			SimpleDateFormat sdf_hr = new SimpleDateFormat("yyyy-MM-dd");
 			Date latestDate = getLastLaunch(n);
+			WebgatherLogger
+					.debug("Datum des letzten Einsammelns: " + latestDate.toString());
 			if (latestDate == null) {
 				return true;
 			}

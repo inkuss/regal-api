@@ -1,4 +1,4 @@
-Willkommen zur regal-api Dokumentation!
+Willkommen zur to.science-api Dokumentation!
 =======================================
 
 .. toctree::

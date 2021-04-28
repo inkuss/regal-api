@@ -188,22 +188,13 @@ public class WpullThread extends Thread {
 			 */
 			WebgatherLogger.info("Webcrawl for " + conf.getName()
 					+ " exited with exitState " + exitState);
-			if (exitState == 0) {
+			proc.destroy();
+			if (exitState == 0 || exitState == 4 || exitState == 8) {
 				new Create().createWebpageVersion(node, conf, outDir, localpath);
-				return;
+				WebgatherLogger
+						.info("WebpageVersion für " + conf.getName() + "wurde angelegt.");
 			}
-			// Keep warc file of failed crawl
-			File warcFile =
-					new File(crawlDir.toString() + "/" + warcFilename + ".warc.gz");
-			File warcFileAttempted = new File(crawlDir.toString() + "/" + warcFilename
-					+ ".warc.gz.attempt" + attempt);
-			warcFile.renameTo(warcFileAttempted);
-			warcFile.delete();
-			attempt++;
-			if (attempt > maxNumberAttempts) {
-				throw new RuntimeException("Webcrawl für " + conf.getName()
-						+ " fehlgeschlagen: Maximale Anzahl Versuche überschritten !");
-			}
+      
 			// Crawl wird erneut angestoßen
 			WebgatherLogger.info("Webcrawl for " + conf.getName()
 					+ " wird erneut angestoßen. " + attempt + ". Versuch.");

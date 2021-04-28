@@ -67,7 +67,7 @@ import helper.oai.OaiDispatcher;
 import models.DublinCoreData;
 import models.Globals;
 import models.Node;
-import models.RegalObject;
+import models.ToScienceObject;
 
 /**
  * @author Jan Schnasse
@@ -724,7 +724,7 @@ public class Modify extends RegalAction {
 			throw new HttpArchiveException(406,
 					"Can't find valid destiny for move operation. " + node.getParentPid()
 							+ " parent of " + node.getPid() + " has no further parent.");
-		RegalObject object = new RegalObject();
+		ToScienceObject object = new ToScienceObject();
 		object.setParentPid(destinyPid);
 		node = new Create().patchResource(node, object);
 		play.Logger.info("Move " + node.getPid() + " to new parent "
@@ -848,7 +848,7 @@ public class Modify extends RegalAction {
 				throw new HttpArchiveException(502, node.getPid() + " Add Doi failed!\n"
 						+ result + "\n Datacite replies: " + e.getMessage());
 			}
-			RegalObject o = new RegalObject();
+			ToScienceObject o = new ToScienceObject();
 			o.getIsDescribedBy().setDoi(doi);
 			new Create().patchResource(node, o);
 			return result;
