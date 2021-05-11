@@ -2,6 +2,8 @@
 
 h1. About
 
+!https://api.codacy.com/project/badge/Grade/adaefb63fd5c45aba1a27ff1f9e4dd1b(Codacy Badge)!:https://app.codacy.com/gh/hbz/to.science.api?utm_source=github.com&utm_medium=referral&utm_content=hbz/to.science.api&utm_campaign=Badge_Grade_Settings
+
 Regal - repository for electronic documents and bibliographic data 
 
 For more information visit the "wiki":https://github.com/edoweb/edoweb2/wiki/
