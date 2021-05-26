@@ -506,7 +506,9 @@ public class Gatherconf {
 		} // keine erneute Prüfung
 		HttpURLConnection httpConnection = (HttpURLConnection) new URL(
 				WebgatherUtils.convertUnicodeURLToAscii(url)).openConnection();
+		httpConnection.setInstanceFollowRedirects(false);
 		httpConnection.setRequestMethod("GET");
+		httpConnection.connect();
 		httpResponseCode = httpConnection.getResponseCode();
 		play.Logger.debug("HTTP Response Code: " + httpResponseCode);
 		if (httpResponseCode != 301) {
