@@ -381,6 +381,8 @@ public class FedoraFacade {
 	 */
 	public void updateNode(Node node) {
 		play.Logger.info("Update node in fedora");
+		play.Logger.debug("node access scheme: " + node.getAccessScheme());
+		play.Logger.debug("node publish scheme: " + node.getPublishScheme());
 		DublinCoreHandler.updateDc(node);
 		List<Transformer> models = node.getTransformer();
 		// utils.updateContentModels(models);
