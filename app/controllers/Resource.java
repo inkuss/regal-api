@@ -1116,6 +1116,7 @@ public class Resource extends MyController {
 
 	public static Promise<Result> createVersion(@PathParam("pid") String pid) {
 		try {
+			play.Logger.debug("Starting Resource.createVersion()");
 			Node node = readNodeOrNull(pid);
 			Gatherconf conf = Gatherconf.create(node.getConf());
 			if (conf.hasUrlMoved(node)) {

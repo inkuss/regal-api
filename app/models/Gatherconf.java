@@ -500,13 +500,17 @@ public class Gatherconf {
 	public boolean hasUrlMoved(Node node)
 			throws URISyntaxException, MalformedURLException, IOException {
 
+		play.Logger.debug("Starting hasUrlMoved");
 		if (invalidUrl) {
 			return true;
 		} // keine erneute Prüfung
 		HttpURLConnection httpConnection = (HttpURLConnection) new URL(
 				WebgatherUtils.convertUnicodeURLToAscii(url)).openConnection();
+		httpConnection.setInstanceFollowRedirects(false);
 		httpConnection.setRequestMethod("GET");
+		httpConnection.connect();
 		httpResponseCode = httpConnection.getResponseCode();
+		play.Logger.debug("HTTP Response Code: " + httpResponseCode);
 		if (httpResponseCode != 301) {
 			return false;
 		}
@@ -519,6 +523,7 @@ public class Gatherconf {
 				urlNew = header.getValue().get(0);
 			}
 		}
+		play.Logger.debug("urlNew: " + urlNew);
 		httpConnection.disconnect();
 		new Modify().updateConf(node, this.toString());
 		return true;
