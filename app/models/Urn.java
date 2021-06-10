@@ -48,18 +48,24 @@ public class Urn implements java.io.Serializable {
 		try {
 
 			if (getFinalURL(resolver + urn).toString().equals(httpUriOfResource)) {
+				play.Logger.debug(
+						"final URL(" + resolver + urn + ") equals " + httpUriOfResource);
 				success = true;
 			} else {
+				play.Logger.debug("resolver+urn = " + resolver + urn);
 				URL url = new URL(resolver + urn);
 				HttpURLConnection con = (HttpURLConnection) url.openConnection();
 				con.setReadTimeout(1000 * 2);
 				HttpURLConnection.setFollowRedirects(true);
 				con.connect();
 				resolverStatus = con.getResponseCode();
+				play.Logger.debug("resolverStatus=" + resolverStatus);
 				resolvesTo =
 						parseAdressFromHtml(con.getInputStream(), httpUriOfResource);
 				if (resolvesTo.equals(httpUriOfResource))
-					success = true;
+					play.Logger.debug(
+							"httpUriOfResource=" + httpUriOfResource + "; success = true");
+				success = true;
 			}
 		} catch (Exception e) {
 
