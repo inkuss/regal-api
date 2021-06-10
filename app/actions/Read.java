@@ -651,7 +651,9 @@ public class Read extends RegalAction {
 	 * @return a urn object that describes the status of the urn
 	 */
 	public Urn getUrnStatus(Node node) {
-		return getUrnStatus(node.getUrn(), node.getPid());
+		return getUrnStatus(
+				node.getUrn() == null ? node.getUrnFromMetadata() : node.getUrn(),
+				node.getPid());
 	}
 
 	public Urn getUrnStatus(String urn, String pid) {
