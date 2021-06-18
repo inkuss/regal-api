@@ -19,6 +19,7 @@ package controllers;
 import static archive.fedora.FedoraVocabulary.IS_PART_OF;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -54,6 +55,7 @@ import com.wordnik.swagger.core.util.JsonUtil;
 
 import actions.BulkAction;
 import actions.Enrich;
+import archive.fedora.FedoraFacade;
 import archive.fedora.RdfUtils;
 import authenticate.BasicAuth;
 import helper.HttpArchiveException;
@@ -150,13 +152,11 @@ public class Resource extends MyController {
 		} catch (Exception e) {
 			return Promise.promise(new Function0<Result>() {
 
-				public Result apply() {
-					return JsonMessage(new Message(e, 500));
-				}
-
-			});
-		}
+	public Result apply() {
+		return JsonMessage(new Message(e, 500));
 	}
+
+	});}}
 
 	private static Promise<Result> jsonList(String namespace, String contentType,
 			int from, int until) {
@@ -229,6 +229,30 @@ public class Resource extends MyController {
 			}
 		});
 	}
+
+	@ApiOperation(produces = "application/json,text/html,text/csv,text/plain", nickname = "getPids", value = "getPids", notes = "Returns a list of pids", httpMethod = "GET")
+	public static Promise<Result> getPids(
+			@QueryParam("namespace") String namespace,
+			@QueryParam("number") int number) {
+		try {
+			String[] pidArr = Globals.fedora.getPids(namespace, number);
+			// hier weiter: Ausgabe in Datei /opt/regal/logs/get_pids.txt, vorher Historienstand anlegen
+			File OutDatei = new File("/opt/regal/logs/get_pids.txt");
+			return ok(OutDatei);
+		} catch (FedoraClientException e) {
+			return Promise.promise(new Function0<Result>() {
+				public Result apply() {
+					return JsonMessage(new Message(e, e.getCode()));
+				}
+			});
+		} catch (Exception e) {
+			return Promise.promise(new Function0<Result>() {
+
+	public Result apply() {
+		return JsonMessage(new Message(e, 500));
+	}
+
+	});}}
 
 	@ApiOperation(produces = "text/plain", nickname = "listMetadata", value = "listMetadata", notes = "Shows Metadata of a resource.", response = play.mvc.Result.class, httpMethod = "GET")
 	public static Promise<Result> listMetadata(@PathParam("pid") String pid,
@@ -337,17 +361,18 @@ public class Resource extends MyController {
 				// return JsonMessage(new Message( json(e.toString()) ));
 			}
 		});
-	}
+	}jsonList
 
-	@ApiOperation(produces = "application/json", nickname = "patchResources", value = "patchResources", notes = "Applies the PATCH object to the resource and to all child resources", response = Message.class, httpMethod = "PUT")
-	@ApiImplicitParams({
-			@ApiImplicitParam(value = "RegalObject wich specifies a values that must be modified in the resource and it's childs", required = true, dataType = "RegalObject", paramType = "body") })
+	@ApiOperation(produces="application/json",nickname="patchResources",value="patchResources",notes="Applies the PATCH object to the resource and to all child resources",response=Message.class,httpMethod="PUT")@ApiImplicitParams({@ApiImplicitParam(value="RegalObject wich specifies a values that must be modified in the resource and it's childs",required=true,dataType="RegalObject",paramType="body")
+
+	})
+
 	public static Promise<Result> patchResources(@PathParam("pid") String pid) {
 		return new BulkActionAccessor().call((userId) -> {
 			ToScienceObject object = getRegalObject(request().body().asJson());
 			List<Node> list = Globals.fedora.listComplexObject(pid);
 			list.removeIf(n -> "D".equals(n.getState()));
-			BulkAction bulk = new BulkAction();
+			BulkAction bulk = new BulkAction();jsonList
 			bulk.executeOnNodes(list, userId, nodes -> {
 				return create.patchResources(nodes, object);
 			});
@@ -362,7 +387,7 @@ public class Resource extends MyController {
 	public static Promise<Result> updateResource(@PathParam("pid") String pid) {
 		return new ModifyAction().call(pid, userId -> {
 			play.Logger.debug("Updating Pid: " + pid);
-			String result = "";
+			String result = "";jsonList
 			Node node = readNodeOrNull(pid);
 			ToScienceObject object = getRegalObject(request().body().asJson());
 			Node newNode = null;
@@ -402,7 +427,7 @@ public class Resource extends MyController {
 			ToScienceObject object;
 			play.Logger.debug("Json Body: " + json);
 			if (json != null) {
-				object = MyController.mapper.readValue(json.toString(),
+				object = MyController.mapper.readValue(json.toString(),jsonList
 						ToScienceObject.class);
 				return object;
 			}
@@ -426,11 +451,10 @@ public class Resource extends MyController {
 					modify.updateSeq(pid, request().body().asJson().toString());
 			return JsonMessage(new Message(result));
 		});
-	}
+	}jsonList @ApiOperation(produces="application/json",nickname="updateMetadata",value="updateMetadata",notes="Updates the metadata of the resource using n-triples.",response=Message.class,httpMethod="PUT")@ApiImplicitParams({@ApiImplicitParam(value="Metadata",required=true,dataType="string",paramType="body")
 
-	@ApiOperation(produces = "application/json", nickname = "updateMetadata", value = "updateMetadata", notes = "Updates the metadata of the resource using n-triples.", response = Message.class, httpMethod = "PUT")
-	@ApiImplicitParams({
-			@ApiImplicitParam(value = "Metadata", required = true, dataType = "string", paramType = "body") })
+	})
+
 	public static Promise<Result> updateMetadata(@PathParam("pid") String pid) {
 		return new ModifyAction().call(pid, node -> {
 			try {
@@ -456,11 +480,10 @@ public class Resource extends MyController {
 				throw new HttpArchiveException(500, e);
 			}
 		});
-	}
+	}jsonList @ApiOperation(produces="application/json",nickname="updateData",value="updateData",notes="Updates the data of a resource",response=Message.class,httpMethod="PUT")@ApiImplicitParams({@ApiImplicitParam(name="data",value="data",dataType="file",required=true,paramType="body")
 
-	@ApiOperation(produces = "application/json", nickname = "updateData", value = "updateData", notes = "Updates the data of a resource", response = Message.class, httpMethod = "PUT")
-	@ApiImplicitParams({
-			@ApiImplicitParam(name = "data", value = "data", dataType = "file", required = true, paramType = "body") })
+	})
+
 	public static Promise<Result> updateData(@PathParam("pid") String pid,
 			@QueryParam("md5") String md5) {
 		return new ModifyAction().call(pid, node -> {
@@ -492,7 +515,7 @@ public class Resource extends MyController {
 				Object o = request().body().asJson();
 				DublinCoreData dc;
 				if (o != null) {
-					dc = MyController.mapper.readValue(o.toString(),
+					dc = MyController.mapper.readValue(o.toString(),jsonList
 							DublinCoreData.class);
 				} else {
 					dc = new DublinCoreData();
@@ -522,7 +545,7 @@ public class Resource extends MyController {
 		});
 	}
 
-	@ApiOperation(produces = "application/json", nickname = "activateResource", value = "activateResource", notes = "Activates a deleted resource", response = Message.class, httpMethod = "POST")
+	@ApiOperation(produces = "application/json", nickname = "activatejsonListResource", value = "activateResource", notes = "Activates a deleted resource", response = Message.class, httpMethod = "POST")
 	public static Promise<Result> activateResource(@PathParam("pid") String pid) {
 		return new BulkActionAccessor().call((userId) -> {
 			List<Node> list = Globals.fedora.listComplexObject(pid);
@@ -541,9 +564,8 @@ public class Resource extends MyController {
 			String result = delete.deleteSeq(pid);
 			return JsonMessage(new Message(result));
 		});
-	}
+	}jsonList @ApiOperation(produces="application/json",nickname="deleteMetadata",value="deleteMetadata",notes="Deletes a resources metadata",response=Message.class,httpMethod="DELETE")
 
-	@ApiOperation(produces = "application/json", nickname = "deleteMetadata", value = "deleteMetadata", notes = "Deletes a resources metadata", response = Message.class, httpMethod = "DELETE")
 	public static Promise<Result> deleteMetadata(@PathParam("pid") String pid,
 			@QueryParam("field") String field) {
 		return new ModifyAction().call(pid, node -> {
@@ -572,7 +594,7 @@ public class Resource extends MyController {
 	@ApiOperation(produces = "application/json", nickname = "deleteData", value = "deleteData", notes = "Deletes a resources data", response = Message.class, httpMethod = "DELETE")
 	public static Promise<Result> deleteData(@PathParam("pid") String pid) {
 		return new ModifyAction().call(pid, node -> {
-			String result = delete.deleteData(pid);
+			String result = delete.deleteData(pid);jsonList
 			return JsonMessage(new Message(result));
 		});
 	}
@@ -598,9 +620,10 @@ public class Resource extends MyController {
 			response().setHeader("Transfer-Encoding", "Chunked");
 			return ok(bulk.getChunks());
 		});
-	}
+	}jsonList
 
-	@ApiOperation(produces = "application/json,text/html", nickname = "listParts", value = "listParts", notes = "List resources linked with hasPart", response = play.mvc.Result.class, httpMethod = "GET")
+	@ApiOperation(produces="application/json,text/html",nickname="listParts",value="listParts",notes="List resources linked with hasPart",response=play.mvc.Result.class,httpMethod="GET")
+
 	public static Promise<Result> listParts(@PathParam("pid") String pid,
 			@QueryParam("style") String style) {
 		return new ReadMetadataAction().call(pid, node -> {
@@ -633,7 +656,7 @@ public class Resource extends MyController {
 			try {
 				SearchResponse response = getSearchResult(queryString, from, until);
 				SearchHits hits = response.getHits();
-				Aggregations aggs = response.getAggregations();
+				Aggregations aggs = response.getAggregations();jsonList
 				List<SearchHit> list = Arrays.asList(hits.getHits());
 				hitMap = read.hitlistToMap(list);
 				if ("csv".equals(format)) {

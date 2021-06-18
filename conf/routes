@@ -20,6 +20,7 @@ GET /checks/doiStatus				controllers.Checks.doiStatus(from: Int?=0,until: Int?=1
 # Resource
 GET /resource/status				controllers.Resource.listResourcesStatus(namespace?="",contentType?="",from: Int ?=0, until: Int?=100)
 GET /find					        controllers.Resource.search(q?="*",from: Int?=0,until: Int?=10,format?="html")
+GET	/getPids						controllers.Resource.getPids(namespace?="",number: Int ?=10)
 GET /resource/:pid/urn				controllers.Resource.listUrn(pid)
 GET /resource/:pid/edit				controllers.Resource.edit(pid:String,format : String?="json",topicId?=null)
 GET /resource/:pid/metadata			controllers.Resource.listMetadata(pid,field?="")
