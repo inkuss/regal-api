@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -57,7 +58,6 @@ import com.wordnik.swagger.core.util.JsonUtil;
 
 import actions.BulkAction;
 import actions.Enrich;
-import archive.fedora.FedoraFacade;
 import archive.fedora.RdfUtils;
 import authenticate.BasicAuth;
 import helper.HttpArchiveException;
@@ -109,9 +109,10 @@ import views.html.tags.getTitle;
  */
 @BasicAuth
 @Api(value = "/resource", description = "The resource endpoint allows one to manipulate and access complex objects as http resources. ")
-
 @SuppressWarnings("javadoc")
 public class Resource extends MyController {
+
+	private static BufferedWriter writer;
 
 	@ApiOperation(produces = "application/json", nickname = "listUrn", value = "listUrn", notes = "Returns infos about urn", httpMethod = "GET")
 	public static Promise<Result> listUrn(@PathParam("pid") String pid) {
@@ -148,6 +149,7 @@ public class Resource extends MyController {
 			return jsonList(namespace, contentType, from, until);
 		} catch (HttpArchiveException e) {
 			return Promise.promise(new Function0<Result>() {
+				@Override
 				public Result apply() {
 					return JsonMessage(new Message(e, e.getCode()));
 				}
@@ -155,11 +157,14 @@ public class Resource extends MyController {
 		} catch (Exception e) {
 			return Promise.promise(new Function0<Result>() {
 
-	public Result apply() {
-		return JsonMessage(new Message(e, 500));
-	}
+				@Override
+				public Result apply() {
+					return JsonMessage(new Message(e, 500));
+				}
 
-	});}}
+			});
+		}
+	}
 
 	private static Promise<Result> jsonList(String namespace, String contentType,
 			int from, int until) {
@@ -237,36 +242,40 @@ public class Resource extends MyController {
 	public static Promise<Result> getPids(
 			@QueryParam("namespace") String namespace,
 			@QueryParam("number") int number) {
-		File OutDatei = new File(Globals.logs + "/get_pids.txt");
-		try {
-			String[] pidArr = Globals.fedora.getPids(namespace, number);
 
-			if (OutDatei.exists()) {
-				// Lege Historienstand von Ausgabedatei an
-				Date date = new Date();
-				Timestamp ts = new Timestamp(date.getTime());
-				OutDatei.renameTo(new File(OutDatei.getAbsolutePath() + "." + ts));
-				play.Logger.debug("Renamed file " + OutDatei.getPath() + " to "
-						+ OutDatei.getPath() + "." + ts);
-				OutDatei.close();
-				OutDatei = new File(Globals.logs + "/get_pids.txt");
-			}
+		return new ReadMetadataAction().call(null, node -> {
 
-			BufferedWriter writer = new BufferedWriter(new FileWriter(outDatei));
-			writer.write("PID\n");
-			for (int i = 0; i < pidArr.length; i++) {
-				writer.write(arr[i] + "\n");
-			}
-			writer.close();
+			File OutDatei = new File(Globals.logs + "/get_pids.txt");
 
-			return ok(OutDatei);
-		} catch (Exception e) {
-			return Promise.promise(new Function0<Result>() {
-				public Result apply() {
-					return JsonMessage(new Message(e, e.getCode()));
+			try {
+				String[] pidArr = Globals.fedora.getPids(namespace, number);
+
+				if (OutDatei.exists()) {
+					// Lege Historienstand von Ausgabedatei an
+					Date date = new Date();
+					Timestamp ts = new Timestamp(date.getTime());
+					OutDatei.renameTo(new File(OutDatei.getAbsolutePath() + "." + ts));
+					play.Logger.debug("Renamed file " + OutDatei.getPath() + " to "
+							+ OutDatei.getPath() + "." + ts);
+					OutDatei = new File(Globals.logs + "/get_pids.txt");
 				}
-			});
-		}
+
+				writer = new BufferedWriter(new FileWriter(OutDatei));
+				writer.write("PID\n");
+				for (int i = 0; i < pidArr.length; i++) {
+					writer.write(pidArr[i] + "\n");
+				}
+				writer.close();
+
+				return JsonMessage(new Message(
+						"Alles OK! PID-Liste nach " + OutDatei.getPath() + "geschrieben.",
+						200));
+
+			} catch (Exception e) {
+				return JsonMessage(new Message(e, 500));
+			}
+
+		});
 	}
 
 	@ApiOperation(produces = "text/plain", nickname = "listMetadata", value = "listMetadata", notes = "Shows Metadata of a resource.", response = play.mvc.Result.class, httpMethod = "GET")
@@ -380,9 +389,7 @@ public class Resource extends MyController {
 
 	@ApiOperation(produces = "application/json", nickname = "patchResources", value = "patchResources", notes = "Applies the PATCH object to the resource and to all child resources", response = Message.class, httpMethod = "PUT")
 	@ApiImplicitParams({
-			@ApiImplicitParam(value = "RegalObject wich specifies a values that must be modified in the resource and it's childs", required = true, dataType = "RegalObject", paramType = "body")
-
-	})
+			@ApiImplicitParam(value = "RegalObject wich specifies a values that must be modified in the resource and it's childs", required = true, dataType = "RegalObject", paramType = "body") })
 	public static Promise<Result> patchResources(@PathParam("pid") String pid) {
 		return new BulkActionAccessor().call((userId) -> {
 			ToScienceObject object = getRegalObject(request().body().asJson());
@@ -469,7 +476,9 @@ public class Resource extends MyController {
 		});
 	}
 
-	@ApiOperation(produces="application/json",nickname="updateMetadata",value="updateMetadata",notes="Updates the metadata of the resource using n-triples.",response=Message.class,httpMethod="PUT")@ApiImplicitParams({@ApiImplicitParam(value="Metadata",required=true,dataType="string",paramType="body")
+	@ApiOperation(produces = "application/json", nickname = "updateMetadata", value = "updateMetadata", notes = "Updates the metadata of the resource using n-triples.", response = Message.class, httpMethod = "PUT")
+	@ApiImplicitParams({
+			@ApiImplicitParam(value = "Metadata", required = true, dataType = "string", paramType = "body") })
 	public static Promise<Result> updateMetadata(@PathParam("pid") String pid) {
 		return new ModifyAction().call(pid, node -> {
 			try {
@@ -668,12 +677,12 @@ public class Resource extends MyController {
 			@QueryParam("from") int from, @QueryParam("until") int until,
 			@QueryParam("format") String format) {
 		return new ReadMetadataAction().call(null, node -> {
-			List<Map<String, Object>> hitMap = new ArrayList<Map<String, Object>>();
+			List<Map<String, Object>> hitMap = new ArrayList<>();
 			try {
 				SearchResponse response = getSearchResult(queryString, from, until);
 				SearchHits hits = response.getHits();
 				Aggregations aggs = response.getAggregations();
-				<SearchHit> list = Arrays.asList(hits.getHits());
+				List<SearchHit> list = Arrays.asList(hits.getHits());
 				hitMap = read.hitlistToMap(list);
 				if ("csv".equals(format)) {
 					return getCsvResults(new ObjectMapper().valueToTree(hitMap));
@@ -1127,10 +1136,9 @@ public class Resource extends MyController {
 					}
 					Globals.heritrix.createJobDir(conf);
 					return JsonMessage(new Message(result, 200));
-				} else {
-					throw new HttpArchiveException(409,
-							"Please provide JSON config in request body.");
 				}
+				throw new HttpArchiveException(409,
+						"Please provide JSON config in request body.");
 			} catch (Exception e) {
 				throw new HttpArchiveException(500, e);
 			}
