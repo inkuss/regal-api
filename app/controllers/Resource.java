@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -237,7 +238,16 @@ public class Resource extends MyController {
 		try {
 			String[] pidArr = Globals.fedora.getPids(namespace, number);
 			// hier weiter: Ausgabe in Datei /opt/regal/logs/get_pids.txt, vorher Historienstand anlegen
-			File OutDatei = new File("/opt/regal/logs/get_pids.txt");
+			File OutDatei = new File(Globals.logs + "/get_pids.txt");
+			if( OutDatei.exists() ) {
+				// Lege Historienstand von Ausgabedatei an
+				Date date = new Date();
+				Timestamp ts = new Timestamp(date.getTime());
+				OutDatei.renameTo(new File(OutDatei.getAbsolutePath() + "." + ts));
+		    play.Logger.debug("Renamed file "+OutDatei.getPath()+" to "+OutDatei.getPath()+"."+ts);
+		    OutDatei.close();
+		    OutDatei = new File(Globals.logs + "/get_pids.txt");
+			}
 			return ok(OutDatei);
 		} catch (FedoraClientException e) {
 			return Promise.promise(new Function0<Result>() {

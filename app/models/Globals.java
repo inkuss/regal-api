@@ -123,6 +123,12 @@ public class Globals {
 			Play.application().configuration().getString("regal-api.protocol");
 
 	/**
+	 * The Logs directory of regal-api
+	 */
+	public static String logs =
+			Play.application().configuration().getString("regal-api.logs");
+
+	/**
 	 * Urn resolver used for testing urn resolving
 	 * 
 	 */
