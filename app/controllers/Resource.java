@@ -18,6 +18,7 @@ package controllers;
 
 import static archive.fedora.FedoraVocabulary.IS_PART_OF;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -235,34 +236,37 @@ public class Resource extends MyController {
 	public static Promise<Result> getPids(
 			@QueryParam("namespace") String namespace,
 			@QueryParam("number") int number) {
+		File OutDatei = new File(Globals.logs + "/get_pids.txt");
 		try {
 			String[] pidArr = Globals.fedora.getPids(namespace, number);
-			// hier weiter: Ausgabe in Datei /opt/regal/logs/get_pids.txt, vorher Historienstand anlegen
-			File OutDatei = new File(Globals.logs + "/get_pids.txt");
-			if( OutDatei.exists() ) {
+
+			if (OutDatei.exists()) {
 				// Lege Historienstand von Ausgabedatei an
 				Date date = new Date();
 				Timestamp ts = new Timestamp(date.getTime());
 				OutDatei.renameTo(new File(OutDatei.getAbsolutePath() + "." + ts));
-		    play.Logger.debug("Renamed file "+OutDatei.getPath()+" to "+OutDatei.getPath()+"."+ts);
-		    OutDatei.close();
-		    OutDatei = new File(Globals.logs + "/get_pids.txt");
+				play.Logger.debug("Renamed file " + OutDatei.getPath() + " to "
+						+ OutDatei.getPath() + "." + ts);
+				OutDatei.close();
+				OutDatei = new File(Globals.logs + "/get_pids.txt");
 			}
+
+			BufferedWriter writer = new BufferedWriter(new FileWriter(outDatei));
+			writer.write("PID\n");
+			for (int i = 0; i < pidArr.length; i++) {
+				writer.write(arr[i] + "\n");
+			}
+			writer.close();
+
 			return ok(OutDatei);
-		} catch (FedoraClientException e) {
+		} catch (Exception e) {
 			return Promise.promise(new Function0<Result>() {
 				public Result apply() {
 					return JsonMessage(new Message(e, e.getCode()));
 				}
 			});
-		} catch (Exception e) {
-			return Promise.promise(new Function0<Result>() {
-
-	public Result apply() {
-		return JsonMessage(new Message(e, 500));
+		}
 	}
-
-	});}}
 
 	@ApiOperation(produces = "text/plain", nickname = "listMetadata", value = "listMetadata", notes = "Shows Metadata of a resource.", response = play.mvc.Result.class, httpMethod = "GET")
 	public static Promise<Result> listMetadata(@PathParam("pid") String pid,
