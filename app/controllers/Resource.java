@@ -109,10 +109,11 @@ import views.html.tags.getTitle;
  */
 @BasicAuth
 @Api(value = "/resource", description = "The resource endpoint allows one to manipulate and access complex objects as http resources. ")
-@ApiOperation(produces = "application/json", nickname = "listUrn", value = "listUrn", notes = "Returns infos about urn", httpMethod = "GET")
+
 @SuppressWarnings("javadoc")
 public class Resource extends MyController {
 
+	@ApiOperation(produces = "application/json", nickname = "listUrn", value = "listUrn", notes = "Returns infos about urn", httpMethod = "GET")
 	public static Promise<Result> listUrn(@PathParam("pid") String pid) {
 		return new ReadMetadataAction().call(pid, (Node node) -> {
 			response().setHeader("Access-Control-Allow-Origin", "*");
