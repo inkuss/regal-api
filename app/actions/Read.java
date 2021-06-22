@@ -651,12 +651,16 @@ public class Read extends RegalAction {
 	 * @return a urn object that describes the status of the urn
 	 */
 	public Urn getUrnStatus(Node node) {
-		return getUrnStatus(node.getUrn(), node.getPid());
+		return getUrnStatus(
+				node.getUrn() == null ? node.getUrnFromMetadata() : node.getUrn(),
+				node.getPid());
 	}
 
 	public Urn getUrnStatus(String urn, String pid) {
-		if (urn == null)
+		if (urn == null) {
+			play.Logger.debug("urn == null");
 			return null;
+		}
 		Urn result = new Urn(urn);
 		result.init(Globals.urnbase + pid);
 		return result;
@@ -744,9 +748,11 @@ public class Read extends RegalAction {
 				node.getPid().substring(node.getNamespace().length() + 1));
 		result.put("catalogId", node.getLegacyId());
 		result.put("webgatherer", getGatherStatus(node));
+		play.Logger.debug("node.getUrn()=" + node.getUrn());
 		if (node.getUrn() != null) {
 			result.put("urn", node.getUrn());
 		} else {
+			play.Logger.debug("Got URN from Metadata: " + node.getUrnFromMetadata());
 			result.put("urn", node.getUrnFromMetadata());
 		}
 		return result;
@@ -809,6 +815,7 @@ public class Read extends RegalAction {
 		try {
 			Urn urn = getUrnStatus(node);
 			int urnStatus = urn == null ? 500 : urn.getResolverStatus();
+			play.Logger.debug("urnStatus=" + urnStatus);
 			return urnStatus;
 		} catch (Exception e) {
 			play.Logger.warn("", e);
