@@ -56,6 +56,7 @@ import actions.BulkAction;
 import actions.Enrich;
 import archive.fedora.RdfUtils;
 import authenticate.BasicAuth;
+import controllers.MyController.ReadMetadataAction;
 import helper.HttpArchiveException;
 import helper.WebgatherUtils;
 import helper.WebsiteVersionPublisher;
@@ -156,6 +157,34 @@ public class Resource extends MyController {
 
 			});
 		}
+	}
+
+	@ApiOperation(produces = "text/plain", nickname = "listMetadata", value = "listMetadata", notes = "Shows Metadata of a resource.", response = play.mvc.Result.class, httpMethod = "GET")
+	public static Promise<Result> listLmri(@PathParam("pid") String pid,
+			@QueryParam("field") String field) {
+		return new ReadMetadataAction().call(pid, node -> {
+			response().setHeader("Access-Control-Allow-Origin", "*");
+			String result = read.readMetadata2(node, field);
+			RDFFormat format = null;
+			if (request().accepts("application/rdf+xml")) {
+				format = RDFFormat.RDFXML;
+				response().setContentType("application/rdf+xml");
+			} else if (request().accepts("text/turtle")) {
+				format = RDFFormat.TURTLE;
+				response().setContentType("text/turtle");
+			} else if (request().accepts("text/plain")) {
+				format = RDFFormat.NTRIPLES;
+				response().setContentType("text/plain");
+			}
+			try (
+					InputStream in = new ByteArrayInputStream(result.getBytes("utf-8"))) {
+				String rdf =
+						RdfUtils.readRdfToString(in, RDFFormat.NTRIPLES, format, "");
+				return ok(rdf);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		});
 	}
 
 	private static Promise<Result> jsonList(String namespace, String contentType,
