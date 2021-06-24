@@ -24,3 +24,4 @@ scripts/variables.conf
 *.HIST
 *~
 *.class
+conf/site.conf
