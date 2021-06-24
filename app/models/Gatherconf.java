@@ -511,7 +511,7 @@ public class Gatherconf {
 		httpConnection.connect();
 		httpResponseCode = httpConnection.getResponseCode();
 		play.Logger.debug("HTTP Response Code: " + httpResponseCode);
-		if (httpResponseCode >= 300 && httpResponseCode < 400) {
+		if (httpResponseCode < 300 || httpResponseCode >= 400) {
 			return false;
 		}
 		setInvalidUrl(true);
