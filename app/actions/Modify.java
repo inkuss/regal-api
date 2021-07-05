@@ -187,6 +187,22 @@ public class Modify extends RegalAction {
 	}
 
 	/**
+	 * This method creates a lrmi datastream and appends it to a ressource.
+	 * 
+	 * @param pid The pid of the ressource that must be updated
+	 * @param content The metadata in the format lrmi
+	 * @return a short message
+	 */
+	public String updateLrmiAndEnrichMetadata(String pid, String content) {
+		try {
+			Node node = new Read().readNode(pid);
+			return updateLrmiAndEnrichMetadata(node, content);
+		} catch (Exception e) {
+			throw new UpdateNodeException(e);
+		}
+	}
+
+	/**
 	 * @param node The node that must be updated
 	 * @param content The metadata as rdf string
 	 * @return a short message
@@ -227,6 +243,42 @@ public class Modify extends RegalAction {
 	 * @return a short message
 	 */
 	public String updateLobidify2AndEnrichMetadata(Node node, String content) {
+
+		String pid = node.getPid();
+		if (content == null) {
+			throw new HttpArchiveException(406,
+					pid + " You've tried to upload an empty string."
+							+ " This action is not supported."
+							+ " Use HTTP DELETE instead.\n");
+		}
+
+		if (content.contains(archive.fedora.Vocabulary.REL_MAB_527)) {
+			String lobidUri = RdfUtils.findRdfObjects(node.getPid(),
+					archive.fedora.Vocabulary.REL_MAB_527, content, RDFFormat.NTRIPLES)
+					.get(0);
+			String alephid =
+					lobidUri.replaceFirst("http://lobid.org/resource[s]*/", "");
+			alephid = alephid.replaceAll("#.*", "");
+			content = getLobid2DataAsNtripleString(node, alephid);
+			updateMetadata2(node, content);
+
+			String enrichMessage = Enrich.enrichMetadata2(node);
+			return pid + " metadata successfully updated, lobidified and enriched! "
+					+ enrichMessage;
+		} else {
+			updateMetadata2(node, content);
+			String enrichMessage = Enrich.enrichMetadata2(node);
+			return pid + " metadata successfully updated, and enriched! "
+					+ enrichMessage;
+		}
+	}
+
+	/**
+	 * @param node The node of the ressource that must be updated
+	 * @param content The metadata as lrmi string
+	 * @return a short message
+	 */
+	public String updateLrmiAndEnrichMetadata(Node node, String content) {
 
 		String pid = node.getPid();
 		if (content == null) {

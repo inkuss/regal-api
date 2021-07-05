@@ -454,6 +454,21 @@ public class Resource extends MyController {
 		});
 	}
 
+	@ApiOperation(produces = "application/json", nickname = "updateLrmiData", value = "updateLrmiData", notes = "Updates the metadata of the resource using Lrmi data.", response = Message.class, httpMethod = "PUT")
+	@ApiImplicitParams({
+			@ApiImplicitParam(value = "Metadata", required = true, dataType = "string", paramType = "body") })
+	public static Promise<Result> updateLrmiData(@PathParam("pid") String pid) {
+		return new ModifyAction().call(pid, node -> {
+			try {
+				String result =
+						modify.updateLrmiAndEnrichMetadata(pid, request().body().asText());
+				return JsonMessage(new Message(result));
+			} catch (Exception e) {
+				throw new HttpArchiveException(500, e);
+			}
+		});
+	}
+
 	@ApiOperation(produces = "application/json", nickname = "updateData", value = "updateData", notes = "Updates the data of a resource", response = Message.class, httpMethod = "PUT")
 	@ApiImplicitParams({
 			@ApiImplicitParam(name = "data", value = "data", dataType = "file", required = true, paramType = "body") })
