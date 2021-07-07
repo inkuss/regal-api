@@ -462,10 +462,21 @@ public class Resource extends MyController {
 			@ApiImplicitParam(value = "Metadata", required = true, dataType = "string", paramType = "body") })
 	public static Promise<Result> updateLrmiData(@PathParam("pid") String pid) {
 		return new ModifyAction().call(pid, node -> {
+			play.Logger.debug("Starting updateLrmiData with pid=" + pid);
 			try {
-				String result =
+				/**
+				 * Wir legen 2 Datenströme an:
+				 * 
+				 * 1. gemappte LRMI-Daten als Metadata2-Datenstrom
+				 */
+				String result1 =
 						modify.updateLrmiAndEnrichMetadata(pid, request().body().asText());
-				return JsonMessage(new Message(result));
+				/**
+				 * 2. ungemappte LRMI-Daten als neuartiger Datenstrom "lrmidata"
+				 */
+				String result2 = modify.updateLobidify2AndEnrichMetadata(pid,
+						request().body().asText());
+				return JsonMessage(new Message(result1 + "\n" + result2));
 			} catch (Exception e) {
 				throw new HttpArchiveException(500, e);
 			}

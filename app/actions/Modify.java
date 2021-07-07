@@ -187,7 +187,25 @@ public class Modify extends RegalAction {
 	}
 
 	/**
-	 * This method creates a lrmi datastream and appends it to a ressource.
+	 * This method maps LRMI data to the Metadata2 format and creates a datastream
+	 * "metadata2" of the resource
+	 * 
+	 * @param pid The pid of the resource that must be updated
+	 * @param content The metadata in the format lrmi
+	 * @return a short message
+	 */
+	public String updateAndMapLrmiAndEnrichMetadata(String pid, String content) {
+		try {
+			Node node = new Read().readNode(pid);
+			return updateAndMapLrmiAndEnrichMetadata(node, content);
+		} catch (Exception e) {
+			throw new UpdateNodeException(e);
+		}
+	}
+
+	/**
+	 * This method creates an LRMI datastream (unmapped) and appends it to a
+	 * ressource.
 	 * 
 	 * @param pid The pid of the ressource that must be updated
 	 * @param content The metadata in the format lrmi
@@ -274,6 +292,50 @@ public class Modify extends RegalAction {
 	}
 
 	/**
+	 * The method maps LRMI metadata to the Metadata2 format and creates a
+	 * datastream of the resource
+	 * 
+	 * @param node The node of the ressource that must be updated
+	 * @param content The metadata as lrmi string
+	 * @return a short message
+	 */
+	public String updateAndMapLrmiAndEnrichMetadata(Node node, String content) {
+
+		String pid = node.getPid();
+		if (content == null) {
+			throw new HttpArchiveException(406,
+					pid + " You've tried to upload an empty string."
+							+ " This action is not supported."
+							+ " Use HTTP DELETE instead.\n");
+		}
+
+		if (content.contains(archive.fedora.Vocabulary.REL_MAB_527)) {
+			String lobidUri = RdfUtils.findRdfObjects(node.getPid(),
+					archive.fedora.Vocabulary.REL_MAB_527, content, RDFFormat.NTRIPLES)
+					.get(0);
+			String alephid =
+					lobidUri.replaceFirst("http://lobid.org/resource[s]*/", "");
+			alephid = alephid.replaceAll("#.*", "");
+			// Das ersetzt den Content. Kann das hier sein ? (wir wollen doch mappen)
+			content = getLobid2DataAsNtripleString(node, alephid);
+			// new String lrmi_mapped = mapLRMIToMetdata2(node, content);
+			// updateMetadata2(node, lrmi_mapped);
+			updateMetadata2(node, content);
+
+			String enrichMessage = Enrich.enrichMetadata2(node);
+			return pid + " metadata successfully updated, lobidified and enriched! "
+					+ enrichMessage;
+		} else {
+			updateMetadata2(node, content);
+			String enrichMessage = Enrich.enrichMetadata2(node);
+			return pid + " metadata successfully updated, and enriched! "
+					+ enrichMessage;
+		}
+	}
+
+	/**
+	 * This method creates an LRMI datastream (unmapped) of the resource
+	 * 
 	 * @param node The node of the ressource that must be updated
 	 * @param content The metadata as lrmi string
 	 * @return a short message

@@ -176,6 +176,7 @@ public class Enrich {
 	}
 
 	private static Statement getLabelStatement(String uri) {
+		play.Logger.debug("uri=" + uri);
 		String prefLabel = MyEtikettMaker.getLabelFromEtikettWs(uri);
 		ValueFactory v = RdfUtils.valueFactory;
 		Statement newS = v.createStatement(v.createIRI(uri),
