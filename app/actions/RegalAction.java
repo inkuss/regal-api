@@ -28,6 +28,7 @@ import play.cache.Cache;
  */
 public class RegalAction {
 
+	@SuppressWarnings("javadoc")
 	public Node updateIndex(String pid) {
 		removeNodeFromCache(pid);
 		Node node = new Read().readNode(pid);
@@ -47,9 +48,11 @@ public class RegalAction {
 		Cache.remove(pid);
 	}
 
+	@SuppressWarnings("javadoc")
 	protected String createAggregationUri(String pid) {
 		return Globals.useHttpUris
-				? Globals.protocol + Globals.server + "/resource/" + pid : pid;
+				? Globals.protocol + Globals.server + "/resource/" + pid
+				: pid;
 	}
 
 	/**
@@ -81,10 +84,12 @@ public class RegalAction {
 		return str.toString();
 	}
 
+	@SuppressWarnings("javadoc")
 	protected String getUriFromJsonName(String name) {
 		return Globals.profile.getEtikettByName(name).getUri();
 	}
 
+	@SuppressWarnings("javadoc")
 	protected String getJsonName(String uri) {
 		return Globals.profile.getEtikett(uri).getName();
 	}

@@ -134,11 +134,11 @@ public class Resource extends MyController {
 		try {
 			if (request().accepts("text/html")) {
 				return htmlList(namespace, contentType, from, until);
-			} else {
-				return jsonList(namespace, contentType, from, until);
 			}
+			return jsonList(namespace, contentType, from, until);
 		} catch (HttpArchiveException e) {
 			return Promise.promise(new Function0<Result>() {
+				@Override
 				public Result apply() {
 					return JsonMessage(new Message(e, e.getCode()));
 				}
@@ -146,6 +146,7 @@ public class Resource extends MyController {
 		} catch (Exception e) {
 			return Promise.promise(new Function0<Result>() {
 
+				@Override
 				public Result apply() {
 					return JsonMessage(new Message(e, 500));
 				}
@@ -282,6 +283,7 @@ public class Resource extends MyController {
 		});
 	}
 
+	@SuppressWarnings("resource")
 	@ApiOperation(produces = "application/octet-stream", nickname = "listData", value = "listData", notes = "Shows Data of a resource", response = play.mvc.Result.class, httpMethod = "GET")
 	public static Promise<Result> listData(@PathParam("pid") String pid) {
 		return new ReadDataAction().call(pid, node -> {
@@ -397,13 +399,12 @@ public class Resource extends MyController {
 			RegalObject object;
 			play.Logger.debug("Json Body: " + json);
 			if (json != null) {
-				object = (RegalObject) MyController.mapper.readValue(json.toString(),
-						RegalObject.class);
+				object =
+						MyController.mapper.readValue(json.toString(), RegalObject.class);
 				return object;
-			} else {
-				throw new NullPointerException(
-						"Please PUT at least a type, e.g. {\"type\":\"monograph\"}");
 			}
+			throw new NullPointerException(
+					"Please PUT at least a type, e.g. {\"type\":\"monograph\"}");
 		} catch (JsonMappingException e) {
 			throw new HttpArchiveException(500, e);
 		} catch (JsonParseException e) {
@@ -428,6 +429,7 @@ public class Resource extends MyController {
 	@ApiImplicitParams({
 			@ApiImplicitParam(value = "Metadata", required = true, dataType = "string", paramType = "body") })
 	public static Promise<Result> updateMetadata(@PathParam("pid") String pid) {
+
 		return new ModifyAction().call(pid, node -> {
 			try {
 				String result = modify.updateLobidify2AndEnrichMetadata(pid,
@@ -437,6 +439,7 @@ public class Resource extends MyController {
 				throw new HttpArchiveException(500, e);
 			}
 		});
+
 	}
 
 	@ApiOperation(produces = "application/json", nickname = "updateMetadata2", value = "updateMetadata2", notes = "Updates the metadata of the resource using n-triples.", response = Message.class, httpMethod = "PUT")
@@ -503,7 +506,7 @@ public class Resource extends MyController {
 				Object o = request().body().asJson();
 				DublinCoreData dc;
 				if (o != null) {
-					dc = (DublinCoreData) MyController.mapper.readValue(o.toString(),
+					dc = MyController.mapper.readValue(o.toString(),
 							DublinCoreData.class);
 				} else {
 					dc = new DublinCoreData();
@@ -561,10 +564,9 @@ public class Resource extends MyController {
 			if (field != null && !field.isEmpty()) {
 				String result = delete.deleteMetadataField(pid, field);
 				return JsonMessage(new Message(result));
-			} else {
-				String result = delete.deleteMetadata(pid);
-				return JsonMessage(new Message(result));
 			}
+			String result = delete.deleteMetadata(pid);
+			return JsonMessage(new Message(result));
 		});
 	}
 
@@ -575,10 +577,9 @@ public class Resource extends MyController {
 			if (field != null && !field.isEmpty()) {
 				String result = delete.deleteMetadata2Field(pid, field);
 				return JsonMessage(new Message(result));
-			} else {
-				String result = delete.deleteMetadata2(pid);
-				return JsonMessage(new Message(result));
 			}
+			String result = delete.deleteMetadata2(pid);
+			return JsonMessage(new Message(result));
 		});
 	}
 
@@ -628,9 +629,8 @@ public class Resource extends MyController {
 
 				if (request().accepts("text/html")) {
 					return ok(resources.render(result));
-				} else {
-					return getJsonResult(result);
 				}
+				return getJsonResult(result);
 			} catch (Exception e) {
 				return JsonMessage(new Message(e, 500));
 			}
@@ -643,7 +643,7 @@ public class Resource extends MyController {
 			@QueryParam("from") int from, @QueryParam("until") int until,
 			@QueryParam("format") String format) {
 		return new ReadMetadataAction().call(null, node -> {
-			List<Map<String, Object>> hitMap = new ArrayList<Map<String, Object>>();
+			List<Map<String, Object>> hitMap = new ArrayList<>();
 			try {
 				SearchResponse response = getSearchResult(queryString, from, until);
 				SearchHits hits = response.getHits();
@@ -662,10 +662,8 @@ public class Resource extends MyController {
 				}
 				if (request().accepts("text/csv")) {
 					return getCsvResults(new ObjectMapper().valueToTree(hitMap));
-				} else {
-
-					return getJsonResult(hitMap);
 				}
+				return getJsonResult(hitMap);
 			} catch (Exception e) {
 				return JsonMessage(new Message(e, 500));
 			}
@@ -1073,9 +1071,8 @@ public class Resource extends MyController {
 				if (request().accepts("text/html")) {
 					response().setHeader("Content-Type", "text/html; charset=utf-8");
 					return ok(resource.render(result, null));
-				} else {
-					return getJsonResult(result.getLd2());
 				}
+				return getJsonResult(result.getLd2());
 			} catch (Exception e) {
 				return JsonMessage(new Message(e, 500));
 			}
@@ -1090,8 +1087,7 @@ public class Resource extends MyController {
 				Gatherconf conf = null;
 				if (o != null) {
 					play.Logger.debug("o.toString=" + o.toString());
-					conf = (Gatherconf) MyController.mapper.readValue(o.toString(),
-							Gatherconf.class);
+					conf = MyController.mapper.readValue(o.toString(), Gatherconf.class);
 					// hier die neue conf auch im JobDir von Heritrix ablegen
 					conf.setName(pid);
 					conf.setRobotsPolicy(RobotsPolicy.ignore);
@@ -1106,10 +1102,9 @@ public class Resource extends MyController {
 					}
 					Globals.heritrix.createJobDir(conf);
 					return JsonMessage(new Message(result, 200));
-				} else {
-					throw new HttpArchiveException(409,
-							"Please provide JSON config in request body.");
 				}
+				throw new HttpArchiveException(409,
+						"Please provide JSON config in request body.");
 			} catch (Exception e) {
 				throw new HttpArchiveException(500, e);
 			}
@@ -1245,9 +1240,8 @@ public class Resource extends MyController {
 				List<Map<String, Object>> stati = read.getStatus(nodes);
 				if (request().accepts("text/html")) {
 					return htmlStatusList(stati);
-				} else {
-					return getJsonResult(stati);
 				}
+				return getJsonResult(stati);
 			} catch (HttpArchiveException e) {
 				return JsonMessage(new Message(e, e.getCode()));
 			} catch (Exception e) {
@@ -1304,15 +1298,13 @@ public class Resource extends MyController {
 				Node node = readNodeOrNull(pid);
 				if ("monograph".equals(node.getContentType())) {
 					return redirect(routes.Forms.getCatalogForm(node.getPid()));
-				} else {
-					String zettelType = node.getContentType();
-					String rdf = RdfUtils.readRdfToString(
-							new ByteArrayInputStream(node.toString().getBytes("utf-8")),
-							RDFFormat.JSONLD, RDFFormat.RDFXML, node.getAggregationUri());
-					// rdf = java.net.URLEncoder.encode(rdf, "utf-8");
-					return ok(
-							edit.render(zettelType, "ntriples", pid, pid + ".rdf", rdf));
 				}
+				String zettelType = node.getContentType();
+				String rdf = RdfUtils.readRdfToString(
+						new ByteArrayInputStream(node.toString().getBytes("utf-8")),
+						RDFFormat.JSONLD, RDFFormat.RDFXML, node.getAggregationUri());
+				// rdf = java.net.URLEncoder.encode(rdf, "utf-8");
+				return ok(edit.render(zettelType, "ntriples", pid, pid + ".rdf", rdf));
 			} catch (Exception e) {
 				return JsonMessage(new Message(json(e)));
 			}

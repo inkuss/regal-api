@@ -92,17 +92,16 @@ public class Read extends RegalAction {
 	public Node getLastModifiedChild(Node node, String contentType) {
 		if (contentType == null || contentType.isEmpty()) {
 			return getLastModifiedChild(node);
-		} else {
-			Node oldestNode = null;
-			for (Node n : getParts(node)) {
-				if (contentType.equals(n.getContentType())) {
-					oldestNode = compareDates(n, oldestNode);
-				}
-			}
-			if (oldestNode == null)
-				return node;
-			return oldestNode;
 		}
+		Node oldestNode = null;
+		for (Node n : getParts(node)) {
+			if (contentType.equals(n.getContentType())) {
+				oldestNode = compareDates(n, oldestNode);
+			}
+		}
+		if (oldestNode == null)
+			return node;
+		return oldestNode;
 	}
 
 	private Node compareDates(Node currentNode, Node oldestNode) {
@@ -748,8 +747,9 @@ public class Read extends RegalAction {
 						.equals(Gatherconf.CrawlerSelection.wpull)) {
 					entries.put("crawlControllerState",
 							WpullCrawl.getCrawlControllerState(node));
-					entries.put("crawlExitStatus", WpullCrawl.getCrawlExitStatus(node) < 0
-							? "" : WpullCrawl.getCrawlExitStatus(node));
+					entries.put("crawlExitStatus",
+							WpullCrawl.getCrawlExitStatus(node) < 0 ? ""
+									: WpullCrawl.getCrawlExitStatus(node));
 				}
 				/*
 				 * Launch Count als Summe der Launches über alle Crawler ermitteln -
