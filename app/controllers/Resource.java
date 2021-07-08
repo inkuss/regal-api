@@ -469,13 +469,13 @@ public class Resource extends MyController {
 				 * 
 				 * 1. gemappte LRMI-Daten als Metadata2-Datenstrom
 				 */
-				String result1 =
-						modify.updateLrmiAndEnrichMetadata(pid, request().body().asText());
+				String result1 = modify.updateLobidify2AndEnrichLrmiData(pid,
+						request().body().asText());
 				/**
 				 * 2. ungemappte LRMI-Daten als neuartiger Datenstrom "lrmidata"
 				 */
-				String result2 = modify.updateLobidify2AndEnrichMetadata(pid,
-						request().body().asText());
+				String result2 =
+						modify.updateAndEnrichLrmiData(pid, request().body().asText());
 				return JsonMessage(new Message(result1 + "\n" + result2));
 			} catch (Exception e) {
 				throw new HttpArchiveException(500, e);

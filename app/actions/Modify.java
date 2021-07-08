@@ -194,10 +194,10 @@ public class Modify extends RegalAction {
 	 * @param content The metadata in the format lrmi
 	 * @return a short message
 	 */
-	public String updateAndMapLrmiAndEnrichMetadata(String pid, String content) {
+	public String updateLobidify2AndEnrichLrmiData(String pid, String content) {
 		try {
 			Node node = new Read().readNode(pid);
-			return updateAndMapLrmiAndEnrichMetadata(node, content);
+			return updateLobidify2AndEnrichLrmiData(node, content);
 		} catch (Exception e) {
 			throw new UpdateNodeException(e);
 		}
@@ -211,10 +211,10 @@ public class Modify extends RegalAction {
 	 * @param content The metadata in the format lrmi
 	 * @return a short message
 	 */
-	public String updateLrmiAndEnrichMetadata(String pid, String content) {
+	public String updateAndEnrichLrmiData(String pid, String content) {
 		try {
 			Node node = new Read().readNode(pid);
-			return updateLrmiAndEnrichMetadata(node, content);
+			return updateAndEnrichLrmiData(node, content);
 		} catch (Exception e) {
 			throw new UpdateNodeException(e);
 		}
@@ -292,14 +292,14 @@ public class Modify extends RegalAction {
 	}
 
 	/**
-	 * The method maps LRMI metadata to the Metadata2 format and creates a
-	 * datastream of the resource
+	 * The method maps LRMI metadata to the Metadata2 format and creates a data
+	 * stream of the resource
 	 * 
-	 * @param node The node of the ressource that must be updated
-	 * @param content The metadata as lrmi string
+	 * @param node The node of the resource that must be updated
+	 * @param content The metadata as LRMI string
 	 * @return a short message
 	 */
-	public String updateAndMapLrmiAndEnrichMetadata(Node node, String content) {
+	public String updateLobidify2AndEnrichLrmiData(Node node, String content) {
 
 		String pid = node.getPid();
 		if (content == null) {
@@ -309,38 +309,26 @@ public class Modify extends RegalAction {
 							+ " Use HTTP DELETE instead.\n");
 		}
 
-		if (content.contains(archive.fedora.Vocabulary.REL_MAB_527)) {
-			String lobidUri = RdfUtils.findRdfObjects(node.getPid(),
-					archive.fedora.Vocabulary.REL_MAB_527, content, RDFFormat.NTRIPLES)
-					.get(0);
-			String alephid =
-					lobidUri.replaceFirst("http://lobid.org/resource[s]*/", "");
-			alephid = alephid.replaceAll("#.*", "");
-			// Das ersetzt den Content. Kann das hier sein ? (wir wollen doch mappen)
-			content = getLobid2DataAsNtripleString(node, alephid);
-			// new String lrmi_mapped = mapLRMIToMetdata2(node, content);
-			// updateMetadata2(node, lrmi_mapped);
-			updateMetadata2(node, content);
+		models.LrmiData lrmiData = new models.LrmiData();
+		lrmiData.setContent(content);
+		String metadata2 = lrmiData.lobidify2();
+		// hier evtl noch zu wandeln: metadata2 vom Format JSON ins Format RDF
+		updateMetadata2(node, metadata2);
 
-			String enrichMessage = Enrich.enrichMetadata2(node);
-			return pid + " metadata successfully updated, lobidified and enriched! "
-					+ enrichMessage;
-		} else {
-			updateMetadata2(node, content);
-			String enrichMessage = Enrich.enrichMetadata2(node);
-			return pid + " metadata successfully updated, and enriched! "
-					+ enrichMessage;
-		}
+		String enrichMessage = Enrich.enrichMetadata2(node);
+		return pid
+				+ " LRMI-metadata successfully updated, lobidified and enriched! "
+				+ enrichMessage;
 	}
 
 	/**
-	 * This method creates an LRMI datastream (unmapped) of the resource
+	 * This method creates an LRMI data stream (unmapped) of the resource
 	 * 
-	 * @param node The node of the ressource that must be updated
-	 * @param content The metadata as lrmi string
+	 * @param node The node of the resource that must be updated
+	 * @param content The metadata as LRMI string
 	 * @return a short message
 	 */
-	public String updateLrmiAndEnrichMetadata(Node node, String content) {
+	public String updateAndEnrichLrmiData(Node node, String content) {
 
 		String pid = node.getPid();
 		if (content == null) {
@@ -350,25 +338,14 @@ public class Modify extends RegalAction {
 							+ " Use HTTP DELETE instead.\n");
 		}
 
-		if (content.contains(archive.fedora.Vocabulary.REL_MAB_527)) {
-			String lobidUri = RdfUtils.findRdfObjects(node.getPid(),
-					archive.fedora.Vocabulary.REL_MAB_527, content, RDFFormat.NTRIPLES)
-					.get(0);
-			String alephid =
-					lobidUri.replaceFirst("http://lobid.org/resource[s]*/", "");
-			alephid = alephid.replaceAll("#.*", "");
-			content = getLobid2DataAsNtripleString(node, alephid);
-			updateMetadata2(node, content);
+		updateLrmiData(node, content);
+		return pid + " LRMI-metadata of " + node.getPid()
+				+ " successfully updated! ";
 
-			String enrichMessage = Enrich.enrichMetadata2(node);
-			return pid + " metadata successfully updated, lobidified and enriched! "
-					+ enrichMessage;
-		} else {
-			updateMetadata2(node, content);
-			String enrichMessage = Enrich.enrichMetadata2(node);
-			return pid + " metadata successfully updated, and enriched! "
-					+ enrichMessage;
-		}
+		// Anreicherung muss erst mal nicht sein, wäre neue Methode:
+		// String enrichMessage = Enrich.enrichLrmiData(node);
+		// return pid + " LRMI-metadata successfully updated and enriched! " +
+		// enrichMessage;
 	}
 
 	public String updateLobidify2AndEnrichMetadataIfRecentlyUpdated(String pid,
@@ -1162,6 +1139,26 @@ public class Modify extends RegalAction {
 			return pid + " metadata2 successfully updated!";
 		} catch (RdfException e) {
 			throw new HttpArchiveException(400, e);
+		} catch (IOException e) {
+			throw new UpdateNodeException(e);
+		}
+	}
+
+	String updateLrmiData(Node node, String content) {
+		try {
+			String pid = node.getPid();
+			if (content == null) {
+				throw new HttpArchiveException(406,
+						pid + " You've tried to upload an empty string."
+								+ " This action is not supported."
+								+ " Use HTTP DELETE instead.\n");
+			}
+			File file = CopyUtils.copyStringToFile(content);
+			node.setLrmiDataFile(file.getAbsolutePath());
+			node.setLrmiData(content);
+			OaiDispatcher.makeOAISet(node);
+			reindexNodeAndParent(node);
+			return pid + " LRMI data successfully updated!";
 		} catch (IOException e) {
 			throw new UpdateNodeException(e);
 		}
