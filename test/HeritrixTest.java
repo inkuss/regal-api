@@ -1,9 +1,11 @@
 import static play.test.Helpers.running;
 import static play.test.Helpers.testServer;
 
+import java.io.File;
 import java.util.Date;
 
 import models.Gatherconf;
+import models.Globals;
 import models.Gatherconf.Interval;
 import models.Gatherconf.RobotsPolicy;
 import models.Node;
@@ -42,7 +44,13 @@ public class HeritrixTest {
 				conf.setRobotsPolicy(RobotsPolicy.classic);
 				conf.setStartDate(new Date());
 				webpage.setConf(conf.toString());
-				Node webpageVersion = create.createWebpageVersion(webpage);
+				File crawlDir = Globals.heritrix.getCurrentCrawlDir(conf.getName());
+				String warcPath = Globals.heritrix.findLatestWarc(crawlDir);
+				String uriPath = Globals.heritrix.getUriPath(warcPath);
+				String localpath =
+						Globals.heritrixData + "/heritrix-data" + "/" + uriPath;
+				Node webpageVersion =
+						create.createWebpageVersion(webpage, conf, crawlDir, localpath);
 			}
 		});
 	}

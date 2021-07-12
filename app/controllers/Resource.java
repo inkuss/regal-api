@@ -457,25 +457,37 @@ public class Resource extends MyController {
 		});
 	}
 
-	@ApiOperation(produces = "application/json", nickname = "updateLrmiData", value = "updateLrmiData", notes = "Updates the metadata of the resource using Lrmi data.", response = Message.class, httpMethod = "PUT")
+	@ApiOperation(produces = "application/json", nickname = "updateLrmMessageiData", value = "updateLrmiData", notes = "Updates the metadata of the resource using Lrmi data.", response = Message.class, httpMethod = "PUT")
 	@ApiImplicitParams({
 			@ApiImplicitParam(value = "Metadata", required = true, dataType = "string", paramType = "body") })
 	public static Promise<Result> updateLrmiData(@PathParam("pid") String pid) {
 		return new ModifyAction().call(pid, node -> {
 			play.Logger.debug("Starting updateLrmiData with pid=" + pid);
+			play.Logger
+					.debug("request().body().asText()=" + request().body().asJson());
 			try {
 				/**
 				 * Wir legen 2 Datenströme an:
 				 * 
-				 * 1. gemappte LRMI-Daten als Metadata2-Datenstrom
+				 * 1. ungemappte LRMI-Daten als neuartiger Datenstrom "lrmidata"
 				 */
-				String result1 = modify.updateLobidify2AndEnrichLrmiData(pid,
-						request().body().asText());
-				/**
-				 * 2. ungemappte LRMI-Daten als neuartiger Datenstrom "lrmidata"
-				 */
-				String result2 =
+				// ToDo: Hier asJson() anstatt asText() übergeben
+				String result1 =
 						modify.updateAndEnrichLrmiData(pid, request().body().asText());
+				/**
+				 * 2. gemappte LRMI-Daten als Metadata2-Datenstrom
+				 */
+				RDFFormat format = RDFFormat.TURTLE;
+				if (request().accepts("application/rdf+xml")) {
+					format = RDFFormat.RDFXML;
+				} else if (request().accepts("text/turtle")) {
+					format = RDFFormat.TURTLE;
+				} else if (request().accepts("text/plain")) {
+					format = RDFFormat.NTRIPLES;
+				}
+				String result2 = modify.updateLobidify2AndEnrichLrmiData(pid, format,
+						request().body().asText());
+
 				return JsonMessage(new Message(result1 + "\n" + result2));
 			} catch (Exception e) {
 				throw new HttpArchiveException(500, e);

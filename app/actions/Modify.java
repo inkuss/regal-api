@@ -187,17 +187,20 @@ public class Modify extends RegalAction {
 	}
 
 	/**
-	 * This method maps LRMI data to the Metadata2 format and creates a datastream
+	 * This method maps LRMI data to the Lobid2 format and creates a datastream
 	 * "metadata2" of the resource
 	 * 
 	 * @param pid The pid of the resource that must be updated
+	 * @param format Das RDF-Format, in das die Metadaten konvertiert werden
+	 *          sollen (z.B. TURTLE, XDFXML, NTRIPLES)
 	 * @param content The metadata in the format lrmi
 	 * @return a short message
 	 */
-	public String updateLobidify2AndEnrichLrmiData(String pid, String content) {
+	public String updateLobidify2AndEnrichLrmiData(String pid, RDFFormat format,
+			String content) {
 		try {
 			Node node = new Read().readNode(pid);
-			return updateLobidify2AndEnrichLrmiData(node, content);
+			return updateLobidify2AndEnrichLrmiData(node, format, content);
 		} catch (Exception e) {
 			throw new UpdateNodeException(e);
 		}
@@ -292,14 +295,16 @@ public class Modify extends RegalAction {
 	}
 
 	/**
-	 * The method maps LRMI metadata to the Metadata2 format and creates a data
-	 * stream of the resource
+	 * The method maps LRMI metadata to the Lobid2 format and creates a data
+	 * stream Metadata2 of the resource
 	 * 
 	 * @param node The node of the resource that must be updated
+	 * @param format RDF-Format, z.B. NTRIPLES
 	 * @param content The metadata as LRMI string
 	 * @return a short message
 	 */
-	public String updateLobidify2AndEnrichLrmiData(Node node, String content) {
+	public String updateLobidify2AndEnrichLrmiData(Node node, RDFFormat format,
+			String content) {
 
 		String pid = node.getPid();
 		if (content == null) {
@@ -310,9 +315,10 @@ public class Modify extends RegalAction {
 		}
 
 		models.LrmiData lrmiData = new models.LrmiData();
+		lrmiData.setNode(node);
 		lrmiData.setContent(content);
+		lrmiData.setFormat(format);
 		String metadata2 = lrmiData.lobidify2();
-		// hier evtl noch zu wandeln: metadata2 vom Format JSON ins Format RDF
 		updateMetadata2(node, metadata2);
 
 		String enrichMessage = Enrich.enrichMetadata2(node);
